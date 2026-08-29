@@ -23,9 +23,10 @@ import { SpotCardComponent } from './spot-card.component';
       (cdkDropListDropped)="onDrop($event)"
     >
       @for (spot of spots(); track spot.id; let last = $last) {
-        <div cdkDrag [cdkDragData]="spot"
-             class="animate-slide-in-left"
-             [style.animation-delay]="$index * 40 + 'ms'">
+        <div cdkDrag [cdkDragData]="spot">
+
+          <div class="animate-slide-in-left"
+               [style.animation-delay]="$index * 40 + 'ms'">
 
           <app-spot-card
             [spot]="spot"
@@ -34,6 +35,7 @@ import { SpotCardComponent } from './spot-card.component';
             (hover)="hover.emit($event)"
             (select)="select.emit($event)"
           />
+          </div>
 
           <!-- Connector between spots -->
           @if (!last) {

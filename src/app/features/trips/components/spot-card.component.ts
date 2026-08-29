@@ -2,10 +2,19 @@ import { Component, ChangeDetectionStrategy, input, output, computed } from '@an
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { ActivitySpot, CATEGORY_META } from '../../../core/models/trip.model';
 
+// Colores inline para evitar purga de Tailwind en clases dinámicas
+const CATEGORY_COLORS: Record<string, string> = {
+  food:     '#f59e0b',
+  culture:  '#8b5cf6',
+  nature:   '#10b981',
+  leisure:  '#3b82f6',
+  shopping: '#ec4899',
+};
+
 const ORDER_COLORS = [
-  'bg-violet-500', 'bg-indigo-500', 'bg-blue-500',
-  'bg-cyan-500',   'bg-teal-500',   'bg-emerald-500',
-  'bg-amber-500',  'bg-orange-500', 'bg-rose-500',
+  '#8b5cf6', '#6366f1', '#3b82f6',
+  '#06b6d4', '#14b8a6', '#10b981',
+  '#f59e0b', '#f97316', '#f43f5e',
 ];
 
 @Component({
@@ -15,8 +24,8 @@ const ORDER_COLORS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="group relative bg-white rounded-2xl border transition-all duration-200 ease-smooth
-             cursor-pointer select-none overflow-hidden"
+      class="group relative bg-white rounded-2xl border cursor-pointer select-none overflow-hidden
+             transition-all duration-200"
       [class.border-surface-border]="!isSelected() && !isHovered()"
       [class.border-primary-300]="isHovered() && !isSelected()"
       [class.border-primary-500]="isSelected()"
@@ -25,23 +34,26 @@ const ORDER_COLORS = [
       [class.ring-2]="isSelected()"
       [class.ring-primary-500]="isSelected()"
       [class.ring-offset-2]="isSelected()"
-      [class.-translate-y-px]="isHovered() && !isSelected()"
       (mouseenter)="hover.emit(spot().id)"
       (mouseleave)="hover.emit(null)"
       (click)="select.emit(spot().id)"
     >
-      <!-- Category color strip -->
-      <div class="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl {{ categoryColor() }}"></div>
+      <!-- Category color strip — inline style -->
+      <div
+        class="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+        [style.background]="categoryColor()"
+      ></div>
 
       <div class="pl-4 pr-3 py-3.5 flex items-start gap-3">
 
-        <!-- Order number -->
-        <div class="shrink-0 flex flex-col items-center gap-1 mt-0.5">
-          <div class="w-7 h-7 rounded-xl {{ orderColor() }} text-white text-xs font-bold
-                      flex items-center justify-center shadow-sm
-                      group-hover:scale-110 transition-transform duration-200 ease-spring">
-            {{ spot().order + 1 }}
-          </div>
+        <!-- Order badge — inline style -->
+        <div
+          class="shrink-0 w-7 h-7 rounded-xl text-white text-xs font-bold
+                 flex items-center justify-center shadow-sm mt-0.5
+                 transition-transform duration-200 group-hover:scale-110"
+          [style.background]="orderColor()"
+        >
+          {{ spot().order + 1 }}
         </div>
 
         <!-- Content -->
@@ -50,14 +62,18 @@ const ORDER_COLORS = [
             <h4 class="font-semibold text-ink text-sm leading-snug line-clamp-1">
               {{ spot().name }}
             </h4>
-            <span class="badge shrink-0 {{ categoryMeta().color }} text-2xs">
+            <span class="badge shrink-0 text-2xs"
+                  [style.background]="categoryBadgeBg()"
+                  [style.color]="categoryBadgeColor()">
               {{ categoryMeta().emoji }}
             </span>
           </div>
 
           <p class="text-2xs text-ink-muted truncate mb-2 flex items-center gap-1">
             <svg class="w-2.5 h-2.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+              <path fill-rule="evenodd"
+                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                    clip-rule="evenodd"/>
             </svg>
             {{ spot().address }}
           </p>
@@ -99,22 +115,26 @@ const ORDER_COLORS = [
   `,
 })
 export class SpotCardComponent {
-  readonly spot = input.required<ActivitySpot>();
+  readonly spot       = input.required<ActivitySpot>();
   readonly isSelected = input(false);
-  readonly isHovered = input(false);
+  readonly isHovered  = input(false);
 
-  readonly hover = output<string | null>();
+  readonly hover  = output<string | null>();
   readonly select = output<string>();
 
   readonly categoryMeta = computed(() => CATEGORY_META[this.spot().category]);
 
-  readonly categoryColor = computed(() => ({
-    food:     'bg-amber-400',
-    culture:  'bg-violet-500',
-    nature:   'bg-emerald-500',
-    leisure:  'bg-blue-500',
-    shopping: 'bg-pink-500',
-  }[this.spot().category]));
+  readonly categoryColor = computed(() =>
+    CATEGORY_COLORS[this.spot().category] ?? '#6366f1'
+  );
+
+  readonly categoryBadgeBg = computed(() =>
+    CATEGORY_COLORS[this.spot().category] + '1a'   // hex opacity 10%
+  );
+
+  readonly categoryBadgeColor = computed(() =>
+    CATEGORY_COLORS[this.spot().category] ?? '#6366f1'
+  );
 
   readonly orderColor = computed(() =>
     ORDER_COLORS[this.spot().order % ORDER_COLORS.length]

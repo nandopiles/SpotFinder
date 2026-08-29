@@ -2,24 +2,24 @@ import { Component, ChangeDetectionStrategy, input, output, computed } from '@an
 import { DatePipe } from '@angular/common';
 import { Trip, TripStatus } from '../../../core/models/trip.model';
 
-const STATUS_META: Record<TripStatus, { label: string; dot: string; badge: string }> = {
-  draft:     { label: 'Borrador',    dot: 'bg-slate-400',   badge: 'bg-slate-100 text-slate-600' },
-  planned:   { label: 'Planificado', dot: 'bg-primary-500', badge: 'bg-primary-50 text-primary-700' },
-  completed: { label: 'Completado',  dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700' },
+const CITY_GRADIENTS = [
+  'linear-gradient(135deg, #8b5cf6, #7c3aed, #4f46e5)',
+  'linear-gradient(135deg, #f43f5e, #ec4899, #9333ea)',
+  'linear-gradient(135deg, #f59e0b, #f97316, #ef4444)',
+  'linear-gradient(135deg, #14b8a6, #06b6d4, #3b82f6)',
+  'linear-gradient(135deg, #10b981, #14b8a6, #06b6d4)',
+  'linear-gradient(135deg, #3b82f6, #6366f1, #8b5cf6)',
+];
+
+const STATUS_META: Record<TripStatus, { label: string; dotColor: string; bgColor: string; textColor: string }> = {
+  draft:     { label: 'Borrador',    dotColor: '#94a3b8', bgColor: '#f1f5f9', textColor: '#475569' },
+  planned:   { label: 'Planificado', dotColor: '#6366f1', bgColor: '#eef2ff', textColor: '#4338ca' },
+  completed: { label: 'Completado',  dotColor: '#10b981', bgColor: '#ecfdf5', textColor: '#065f46' },
 };
 
-// Gradiente determinista por ciudad (hash simple)
 function cityGradient(city: string): string {
-  const gradients = [
-    'from-violet-500 via-purple-500 to-indigo-600',
-    'from-rose-400 via-pink-500 to-purple-600',
-    'from-amber-400 via-orange-500 to-rose-500',
-    'from-teal-400 via-cyan-500 to-blue-600',
-    'from-emerald-400 via-teal-500 to-cyan-600',
-    'from-blue-500 via-indigo-500 to-violet-600',
-  ];
   const hash = city.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return gradients[hash % gradients.length];
+  return CITY_GRADIENTS[hash % CITY_GRADIENTS.length];
 }
 
 @Component({
@@ -32,28 +32,39 @@ function cityGradient(city: string): string {
       class="card-interactive group overflow-hidden flex flex-col"
       (click)="select.emit(trip().id)"
     >
-      <!-- Card header with gradient -->
-      <div class="relative h-28 bg-gradient-to-br {{ gradient() }} overflow-hidden">
-        <!-- Noise texture overlay -->
-        <div class="absolute inset-0 bg-noise opacity-30"></div>
+      <!-- ── Header con gradiente ── -->
+      <div class="relative h-32 overflow-hidden shrink-0" [style.background]="gradient()">
 
-        <!-- City initial -->
-        <div class="absolute inset-0 flex items-center justify-center">
-          <span class="text-6xl font-black text-white/10 select-none tracking-tighter">
+        <!-- Letras de fondo -->
+        <div class="absolute inset-0 flex items-center justify-center overflow-hidden">
+          <span class="text-[5rem] font-black select-none tracking-tighter leading-none"
+                style="color: rgba(255,255,255,0.08)">
             {{ trip().city.slice(0, 2).toUpperCase() }}
           </span>
         </div>
 
-        <!-- Top row -->
-        <div class="absolute top-3 left-3 right-3 flex items-start justify-between">
-          <span class="badge bg-white/20 text-white backdrop-blur-sm border border-white/20">
-            <span class="w-1.5 h-1.5 rounded-full {{ statusMeta().dot }}"></span>
+        <!-- Badge de estado -->
+        <div class="absolute top-3 left-3">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+            style="background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.25); backdrop-filter: blur(8px)"
+          >
+            <span
+              class="w-1.5 h-1.5 rounded-full shrink-0"
+              [style.background]="statusMeta().dotColor"
+            ></span>
             {{ statusMeta().label }}
           </span>
+        </div>
+
+        <!-- Botón eliminar -->
+        <div class="absolute top-3 right-3">
           <button
-            class="w-7 h-7 rounded-lg bg-white/10 hover:bg-red-500/80 backdrop-blur-sm
-                   flex items-center justify-center text-white/60 hover:text-white
+            class="w-7 h-7 rounded-lg flex items-center justify-center
                    opacity-0 group-hover:opacity-100 transition-all duration-200"
+            style="background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.7)"
+            (mouseenter)="onDeleteHover($event, true)"
+            (mouseleave)="onDeleteHover($event, false)"
             (click)="$event.stopPropagation(); delete.emit(trip().id)"
             title="Eliminar viaje"
           >
@@ -64,62 +75,78 @@ function cityGradient(city: string): string {
           </button>
         </div>
 
-        <!-- City name -->
-        <div class="absolute bottom-3 left-3">
-          <p class="text-white/70 text-2xs font-semibold uppercase tracking-widest">
-            {{ trip().date | date:'EEE, d MMM':'':'es' }}
+        <!-- Fecha abajo -->
+        <div class="absolute bottom-3 left-3 right-3 flex items-end justify-between">
+          <p class="text-xs font-semibold uppercase tracking-widest"
+             style="color: rgba(255,255,255,0.75)">
+            {{ trip().date | date:'EEE, d MMM' : '' : 'es' }}
           </p>
         </div>
       </div>
 
-      <!-- Card body -->
-      <div class="flex-1 p-4 flex flex-col gap-3">
+      <!-- ── Body ── -->
+      <div class="flex-1 p-4 flex flex-col gap-3 bg-white">
+
+        <!-- Título y ciudad -->
         <div>
-          <h3 class="font-bold text-ink text-base leading-snug group-hover:text-primary-700
-                     transition-colors duration-150 line-clamp-1">
+          <h3 class="font-bold text-base leading-snug line-clamp-1 transition-colors duration-150"
+              style="color: #1a1830">
             {{ trip().title }}
           </h3>
-          <p class="text-xs text-ink-muted mt-0.5 flex items-center gap-1">
+          <p class="text-xs mt-0.5 flex items-center gap-1" style="color: #8b89a8">
             <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+              <path fill-rule="evenodd"
+                    d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                    clip-rule="evenodd"/>
             </svg>
             {{ trip().city }}
           </p>
         </div>
 
-        <!-- Stats row -->
-        <div class="flex items-center gap-3 pt-1 border-t border-surface-border">
-          <div class="flex items-center gap-1.5 text-xs text-ink-muted">
-            <div class="w-5 h-5 rounded-lg bg-primary-50 flex items-center justify-center">
-              <svg class="w-3 h-3 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Stats -->
+        <div class="flex items-center gap-3 pt-3 mt-auto"
+             style="border-top: 1px solid #e5e4f0">
+
+          <!-- Paradas -->
+          <div class="flex items-center gap-1.5 text-xs" style="color: #8b89a8">
+            <div class="w-5 h-5 rounded-lg flex items-center justify-center shrink-0"
+                 style="background: #eef2ff">
+              <svg class="w-3 h-3" fill="none" stroke="#6366f1" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               </svg>
             </div>
-            <span><strong class="text-ink font-semibold">{{ trip().spots.length }}</strong> paradas</span>
+            <span>
+              <strong style="color: #1a1830; font-weight: 600">{{ trip().spots.length }}</strong>
+              parada{{ trip().spots.length !== 1 ? 's' : '' }}
+            </span>
           </div>
 
+          <!-- Tramos (si hay) -->
           @if (trip().legs.length) {
-            <div class="flex items-center gap-1.5 text-xs text-ink-muted">
-              <div class="w-5 h-5 rounded-lg bg-accent-50 flex items-center justify-center">
-                <svg class="w-3 h-3 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="flex items-center gap-1.5 text-xs" style="color: #8b89a8">
+              <div class="w-5 h-5 rounded-lg flex items-center justify-center shrink-0"
+                   style="background: #fdf4ff">
+                <svg class="w-3 h-3" fill="none" stroke="#c026d3" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                 </svg>
               </div>
-              <span><strong class="text-ink font-semibold">{{ trip().legs.length }}</strong> tramos</span>
+              <span>
+                <strong style="color: #1a1830; font-weight: 600">{{ trip().legs.length }}</strong>
+                tramo{{ trip().legs.length !== 1 ? 's' : '' }}
+              </span>
             </div>
           }
 
-          <div class="ml-auto">
-            <span class="text-xs font-semibold text-primary-600 group-hover:gap-1.5
-                         flex items-center gap-1 transition-all duration-150">
-              Ver
-              <svg class="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-150"
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-              </svg>
-            </span>
+          <!-- CTA -->
+          <div class="ml-auto flex items-center gap-1 text-xs font-semibold"
+               style="color: #4f46e5">
+            Ver
+            <svg class="w-3 h-3 transition-transform duration-150 group-hover:translate-x-0.5"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+            </svg>
           </div>
         </div>
       </div>
@@ -127,10 +154,18 @@ function cityGradient(city: string): string {
   `,
 })
 export class TripCardComponent {
-  readonly trip = input.required<Trip>();
+  readonly trip   = input.required<Trip>();
   readonly select = output<string>();
   readonly delete = output<string>();
 
   readonly statusMeta = computed(() => STATUS_META[this.trip().status]);
-  readonly gradient = computed(() => cityGradient(this.trip().city));
+  readonly gradient   = computed(() => cityGradient(this.trip().city));
+
+  onDeleteHover(event: MouseEvent, entering: boolean): void {
+    const btn = event.currentTarget as HTMLElement;
+    btn.style.background = entering
+      ? 'rgba(239, 68, 68, 0.75)'
+      : 'rgba(255,255,255,0.12)';
+    btn.style.color = 'white';
+  }
 }
