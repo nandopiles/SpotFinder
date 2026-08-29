@@ -3,7 +3,7 @@ import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto } from '../../app/c
 import { SEED_TRIPS } from '../data/seed';
 
 const STORAGE_KEY = 'msw_trips';
-const LATENCY = 2000;
+const LATENCY = 600;
 
 function getTrips(): Trip[] {
   const raw = localStorage.getItem(STORAGE_KEY);

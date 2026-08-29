@@ -4,12 +4,13 @@ import { TripStore } from '../../../core/services/trip.store';
 import { TripCardComponent } from '../components/trip-card.component';
 import { CreateTripModalComponent } from '../components/create-trip-modal.component';
 import { EmptyStateComponent } from '../../../shared/components/empty-state.component';
+import { ConfirmModalComponent } from '../../../shared/components/confirm-modal.component';
 import { CreateTripDto } from '../../../core/models/trip.model';
 
 @Component({
   selector: 'app-trip-list',
   standalone: true,
-  imports: [TripCardComponent, CreateTripModalComponent, EmptyStateComponent],
+  imports: [TripCardComponent, CreateTripModalComponent, EmptyStateComponent, ConfirmModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="min-h-screen flex flex-col">
@@ -19,15 +20,7 @@ import { CreateTripDto } from '../../../core/models/trip.model';
 
         <!-- Fondo decorativo -->
         <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <!-- Gradiente base -->
           <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_60%_-10%,_#e0e7ff_0%,_transparent_70%)]"></div>
-          <!-- Orbe izquierdo -->
-          <div class="absolute -left-24 -top-24 w-96 h-96 rounded-full
-                      bg-gradient-to-br from-primary-200/40 to-accent-200/20 blur-3xl"></div>
-          <!-- Orbe derecho -->
-          <div class="absolute -right-16 top-0 w-72 h-72 rounded-full
-                      bg-gradient-to-bl from-accent-200/30 to-primary-100/20 blur-2xl"></div>
-          <!-- Grid pattern -->
           <div class="absolute inset-0 opacity-[0.025]"
                style="background-image: linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(to right, #6366f1 1px, transparent 1px); background-size: 40px 40px;"></div>
         </div>
@@ -36,33 +29,17 @@ import { CreateTripDto } from '../../../core/models/trip.model';
           <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
 
             <!-- Copy -->
-            <div class="max-w-xl animate-fade-up">
+            <div class="max-w-xl">
               <!-- Eyebrow -->
               <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
                           bg-primary-50 border border-primary-100 mb-5">
-                <span class="w-1.5 h-1.5 rounded-full bg-primary-500 animate-pulse-soft"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
                 <span class="text-xs font-semibold text-primary-600 tracking-wide">Planificador de viajes express</span>
               </div>
 
               <h1 class="text-4xl sm:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
                 Tus aventuras,<br>
-                <span class="relative inline-block">
-                  <span class="relative z-10 bg-gradient-to-r from-primary-600 to-accent-500
-                               bg-clip-text text-transparent">
-                    organizadas
-                  </span>
-                  <!-- Underline decoration -->
-                  <svg class="absolute -bottom-1 left-0 w-full" height="6" viewBox="0 0 200 6" preserveAspectRatio="none">
-                    <path d="M0 5 Q50 0 100 4 Q150 8 200 3" stroke="url(#underline-grad)" stroke-width="2.5"
-                          fill="none" stroke-linecap="round"/>
-                    <defs>
-                      <linearGradient id="underline-grad" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stop-color="#4f46e5"/>
-                        <stop offset="100%" stop-color="#c026d3"/>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                </span>
+                <span style="color: #4f46e5">organizadas</span>
               </h1>
 
               <p class="mt-4 text-base text-ink-muted leading-relaxed max-w-md">
@@ -91,7 +68,7 @@ import { CreateTripDto } from '../../../core/models/trip.model';
 
             <!-- Stats cards -->
             @if (!store.isLoading() && store.trips().length) {
-              <div class="flex gap-3 lg:flex-col animate-fade-up" style="animation-delay: 80ms">
+              <div class="flex gap-3 lg:flex-col">
                 <div class="card px-5 py-4 flex items-center gap-4 min-w-[140px]">
                   <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700
                               flex items-center justify-center shadow-sm shrink-0">
@@ -132,7 +109,7 @@ import { CreateTripDto } from '../../../core/models/trip.model';
 
         <!-- Error -->
         @if (store.error()) {
-          <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 animate-fade-up">
+          <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-2xl p-4 mb-6">
             <div class="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
               <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -152,14 +129,24 @@ import { CreateTripDto } from '../../../core/models/trip.model';
             <div class="skeleton h-4 w-32 rounded-lg mb-6"></div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               @for (_ of skeletons; track $index) {
-                <div class="card overflow-hidden">
-                  <div class="skeleton h-32"></div>
-                  <div class="p-4 space-y-3">
-                    <div class="skeleton h-4 w-3/4 rounded-lg"></div>
-                    <div class="skeleton h-3 w-2/5 rounded-lg"></div>
-                    <div class="pt-2 flex gap-2">
+                <div class="card overflow-hidden flex">
+                  <!-- Barra lateral -->
+                  <div class="w-1 shrink-0 skeleton rounded-none"></div>
+                  <!-- Contenido -->
+                  <div class="flex-1 p-4 flex flex-col gap-3">
+                    <!-- Fila superior -->
+                    <div class="flex items-start gap-3">
+                      <div class="skeleton w-10 h-10 rounded-xl shrink-0"></div>
+                      <div class="flex-1 pt-0.5 space-y-2">
+                        <div class="skeleton h-3.5 w-3/4 rounded-md"></div>
+                        <div class="skeleton h-3 w-1/3 rounded-md"></div>
+                      </div>
+                    </div>
+                    <!-- Chips -->
+                    <div class="flex gap-2">
                       <div class="skeleton h-6 w-20 rounded-lg"></div>
                       <div class="skeleton h-6 w-16 rounded-lg"></div>
+                      <div class="skeleton h-6 w-14 rounded-lg"></div>
                     </div>
                   </div>
                 </div>
@@ -202,18 +189,35 @@ import { CreateTripDto } from '../../../core/models/trip.model';
         (cancel)="showModal.set(false)"
       />
     }
+
+    @if (tripToDelete()) {
+      <app-confirm-modal
+        title="Eliminar viaje"
+        [description]="deleteDescription()"
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        (confirm)="confirmDelete()"
+        (cancel)="tripToDelete.set(null)"
+      />
+    }
   `,
 })
 export class TripListContainer implements OnInit {
   protected readonly store = inject(TripStore);
   private readonly router  = inject(Router);
 
-  readonly showModal = signal(false);
-  readonly skeletons = Array(6);
+  readonly showModal    = signal(false);
+  readonly tripToDelete = signal<{ id: string; title: string } | null>(null);
+  readonly skeletons    = Array(6);
 
   readonly totalSpots = computed(() =>
     this.store.trips().reduce((acc, t) => acc + t.spots.length, 0)
   );
+
+  readonly deleteDescription = computed(() => {
+    const t = this.tripToDelete();
+    return t ? `¿Seguro que quieres eliminar "${t.title}"? Esta acción no se puede deshacer.` : '';
+  });
 
   ngOnInit(): void {
     this.store.loadTrips();
@@ -227,9 +231,17 @@ export class TripListContainer implements OnInit {
     this.router.navigate(['/trips', id]);
   }
 
-  async onDelete(id: string): Promise<void> {
-    if (!confirm('¿Eliminar este viaje? Esta acción no se puede deshacer.')) return;
-    await this.store.deleteTrip(id);
+  onDelete(id: string): void {
+    const trip = this.store.trips().find(t => t.id === id);
+    if (!trip) return;
+    this.tripToDelete.set({ id: trip.id, title: trip.title });
+  }
+
+  async confirmDelete(): Promise<void> {
+    const target = this.tripToDelete();
+    if (!target) return;
+    this.tripToDelete.set(null);
+    await this.store.deleteTrip(target.id);
   }
 
   async onCreate(dto: CreateTripDto): Promise<void> {

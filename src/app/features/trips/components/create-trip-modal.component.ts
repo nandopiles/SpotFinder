@@ -8,36 +8,40 @@ import { CreateTripDto } from '../../../core/models/trip.model';
   imports: [ReactiveFormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <!-- Backdrop -->
     <div
-      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4
-             bg-ink/40 backdrop-blur-sm animate-fade-in"
+      class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      style="background: rgba(15,13,36,0.55); backdrop-filter: blur(6px)"
       (click)="onBackdropClick($event)"
     >
-      <!-- Sheet / Modal -->
       <div
-        class="relative w-full sm:max-w-md bg-white
-               rounded-t-3xl sm:rounded-3xl shadow-modal
-               animate-fade-up overflow-hidden"
+        class="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-modal animate-fade-up"
         (click)="$event.stopPropagation()"
       >
-        <!-- Gradient top bar -->
-        <div class="h-1 bg-gradient-primary"></div>
-
         <!-- Handle (mobile) -->
-        <div class="flex justify-center pt-3 pb-1 sm:hidden">
-          <div class="w-10 h-1 rounded-full bg-surface-border"></div>
+        <div class="flex justify-center pt-3 sm:hidden">
+          <div class="w-8 h-1 rounded-full" style="background: #e2e1f0"></div>
         </div>
 
-        <div class="px-6 pt-4 pb-6 sm:pt-6">
+        <div class="px-6 pt-5 pb-6 sm:pt-6">
+
           <!-- Header -->
-          <div class="flex items-start justify-between mb-6">
-            <div>
-              <h2 class="text-xl font-bold text-ink">Nuevo viaje</h2>
-              <p class="text-sm text-ink-muted mt-0.5">Empieza a planificar tu día perfecto</p>
+          <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center"
+                   style="background: #eef2ff">
+                <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="#6366f1" stroke-width="1.8" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-base font-semibold" style="color: #1a1830">Nuevo viaje</h2>
+                <p class="text-xs" style="color: #9896b4">¿A dónde vamos?</p>
+              </div>
             </div>
-            <button class="btn-icon -mr-1 -mt-1" (click)="cancel.emit()">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button class="btn-icon" (click)="cancel.emit()">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
               </svg>
             </button>
@@ -46,9 +50,8 @@ import { CreateTripDto } from '../../../core/models/trip.model';
           <!-- Form -->
           <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
 
-            <!-- Title -->
             <div>
-              <label class="input-label">Título del viaje</label>
+              <label class="input-label">Título</label>
               <input
                 formControlName="title"
                 class="input"
@@ -56,16 +59,10 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                 autocomplete="off"
               />
               @if (form.controls.title.invalid && form.controls.title.touched) {
-                <p class="text-xs text-red-500 mt-1.5 flex items-center gap-1">
-                  <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                  </svg>
-                  El título es obligatorio
-                </p>
+                <p class="text-xs mt-1.5" style="color: #e53e3e">El título es obligatorio</p>
               }
             </div>
 
-            <!-- City + Date row -->
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="input-label">Ciudad</label>
@@ -76,34 +73,18 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                   autocomplete="off"
                 />
                 @if (form.controls.city.invalid && form.controls.city.touched) {
-                  <p class="text-xs text-red-500 mt-1.5">Obligatorio</p>
+                  <p class="text-xs mt-1.5" style="color: #e53e3e">Obligatorio</p>
                 }
               </div>
               <div>
                 <label class="input-label">Fecha</label>
-                <input
-                  formControlName="date"
-                  type="date"
-                  class="input"
-                />
+                <input formControlName="date" type="date" class="input" />
               </div>
             </div>
 
-            <!-- Actions -->
-            <div class="flex gap-3 pt-2">
-              <button type="button" class="btn-ghost flex-1" (click)="cancel.emit()">
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                class="btn-primary flex-1"
-                [disabled]="form.invalid"
-              >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                </svg>
-                Crear viaje
-              </button>
+            <div class="flex gap-2 pt-1">
+              <button type="button" class="btn-ghost flex-1" (click)="cancel.emit()">Cancelar</button>
+              <button type="submit" class="btn-primary flex-1" [disabled]="form.invalid">Crear viaje</button>
             </div>
           </form>
         </div>
