@@ -2,29 +2,19 @@ import { Component, input, output, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { Trip, TripStatus } from '../../../core/models/trip.model';
 
-const CITY_COLORS: string[] = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#14b8a6', '#3b82f6',
-];
-
-const CITY_COLORS_SECONDARY: string[] = [
-  '#8b5cf6', '#a78bfa', '#f472b6', '#fb923c', '#2dd4bf', '#60a5fa',
-];
-
-const STATUS_META: Record<TripStatus, { label: string; color: string; bg: string; dot: string }> = {
-  draft:     { label: 'Borrador',    color: 'var(--color-ink-muted)',  bg: 'var(--color-surface-subtle)', dot: 'var(--color-ink-faint)' },
-  planned:   { label: 'Planificado', color: '#818cf8',                 bg: 'rgba(99,102,241,0.15)',        dot: '#6366f1' },
-  completed: { label: 'Completado',  color: '#34d399',                 bg: 'rgba(16,185,129,0.15)',        dot: '#10b981' },
+const STATUS_META: Record<TripStatus, { label: string }> = {
+  draft:     { label: 'Borrador' },
+  planned:   { label: 'Planificado' },
+  completed: { label: 'Completado' },
 };
 
-const CITY_EMOJIS: string[] = ['🗺️', '✈️', '🏙️', '🌍', '📍', '🧭'];
-
-function cityIndex(city: string): number {
-  return city.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0);
+function colorSecondary(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const mix = (c: number) => Math.round(c + (255 - c) * 0.4).toString(16).padStart(2, '0');
+  return `#${mix(r)}${mix(g)}${mix(b)}`;
 }
-
-function cityColor(city: string): string  { return CITY_COLORS[cityIndex(city) % CITY_COLORS.length]; }
-function cityColor2(city: string): string { return CITY_COLORS_SECONDARY[cityIndex(city) % CITY_COLORS_SECONDARY.length]; }
-function cityEmoji(city: string): string  { return CITY_EMOJIS[cityIndex(city) % CITY_EMOJIS.length]; }
 
 @Component({
   selector: 'app-trip-card',
@@ -35,23 +25,19 @@ function cityEmoji(city: string): string  { return CITY_EMOJIS[cityIndex(city) %
       class="card-interactive overflow-hidden cursor-pointer flex flex-col"
       (click)="select.emit(trip().id)"
     >
-      <!-- Header con gradiente de color de ciudad -->
+      <!-- Header -->
       <div class="relative h-28 shrink-0 overflow-hidden"
            [style.background]="'linear-gradient(135deg, ' + color() + ' 0%, ' + color2() + ' 100%)'">
 
-        <!-- Patrón de puntos decorativo -->
         <div class="absolute inset-0 opacity-20"
              style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 18px 18px;"></div>
 
-        <!-- Emoji ciudad grande -->
         <div class="absolute bottom-3 left-4 text-4xl select-none" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3))">
-          {{ emoji() }}
+          {{ trip().icon }}
         </div>
 
-        <!-- Botón eliminar -->
         <button
-          class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg flex items-center justify-center
-                 transition-all duration-150"
+          class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150"
           style="background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.7)"
           (mouseenter)="onDeleteHover($event, true)"
           (mouseleave)="onDeleteHover($event, false)"
@@ -64,10 +50,9 @@ function cityEmoji(city: string): string  { return CITY_EMOJIS[cityIndex(city) %
           </svg>
         </button>
 
-        <!-- Badge de estado -->
         <div class="absolute top-2.5 left-3">
           <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold"
-                style="background: rgba(0,0,0,0.25); color: rgba(255,255,255,0.95); backdrop-filter: blur(4px)">
+                style="background: rgba(0,0,0,0.25); color: rgba(255,255,255,0.95)">
             <span class="w-1.5 h-1.5 rounded-full shrink-0 bg-white opacity-80"></span>
             {{ statusMeta().label }}
           </span>
@@ -76,8 +61,6 @@ function cityEmoji(city: string): string  { return CITY_EMOJIS[cityIndex(city) %
 
       <!-- Cuerpo -->
       <div class="flex-1 flex flex-col p-4 gap-3">
-
-        <!-- Título + ciudad -->
         <div>
           <h3 class="font-bold text-base leading-tight line-clamp-1 text-ink">{{ trip().title }}</h3>
           <p class="text-xs mt-1 flex items-center gap-1 text-ink-muted">
@@ -88,13 +71,10 @@ function cityEmoji(city: string): string  { return CITY_EMOJIS[cityIndex(city) %
           </p>
         </div>
 
-        <!-- Separador -->
         <div class="h-px bg-surface-border"></div>
 
-        <!-- Fila de métricas -->
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <!-- Fecha -->
             <div class="flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -102,7 +82,6 @@ function cityEmoji(city: string): string  { return CITY_EMOJIS[cityIndex(city) %
               </svg>
               <span class="text-xs font-medium text-ink-secondary">{{ trip().date | date:'d MMM' }}</span>
             </div>
-            <!-- Paradas -->
             <div class="flex items-center gap-1.5">
               <svg class="w-3.5 h-3.5 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -114,10 +93,7 @@ function cityEmoji(city: string): string  { return CITY_EMOJIS[cityIndex(city) %
               </span>
             </div>
           </div>
-
-          <!-- CTA -->
-          <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg
-                       text-primary-500 bg-primary-500/10">
+          <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg text-primary-500 bg-primary-500/10">
             Ver
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
@@ -134,9 +110,8 @@ export class TripCardComponent {
   readonly delete = output<string>();
 
   readonly statusMeta = computed(() => STATUS_META[this.trip().status]);
-  readonly color      = computed(() => cityColor(this.trip().city));
-  readonly color2     = computed(() => cityColor2(this.trip().city));
-  readonly emoji      = computed(() => cityEmoji(this.trip().city));
+  readonly color      = computed(() => this.trip().color);
+  readonly color2     = computed(() => colorSecondary(this.trip().color));
 
   onDeleteHover(event: MouseEvent, entering: boolean): void {
     const el = event.currentTarget as HTMLElement;

@@ -110,6 +110,8 @@ export class CreateTripModalComponent {
     this.confirm.emit({
       title, city, date,
       status: 'draft',
+      icon: '✈️',
+      color: '#6366f1',
       centerCoordinates: { lat: 0, lng: 0 },
       spots: [],
       legs: [],

@@ -80,6 +80,8 @@ module.exports = {
         'fade-up':        'fadeUp 0.3s ease-out forwards',
         'scale-in':       'scaleIn 0.2s ease-out forwards',
         'slide-in-left':  'slideInLeft 0.3s ease-out forwards',
+        'slide-in-right': 'slideInRight 0.3s ease-out forwards',
+        'slide-out-right': 'slideOutRight 0.3s ease-in forwards',
         'shimmer':        'shimmer 1.8s linear infinite',
         'pulse-soft':     'pulseSoft 2s ease-in-out infinite',
         'bounce-soft':    'bounceSoft 0.5s ease-out forwards',
@@ -101,8 +103,16 @@ module.exports = {
           '0%':   { opacity: '0', transform: 'scale(0.95)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
+        slideOutRight: {
+          '0%':   { opacity: '1', transform: 'translateX(0)' },
+          '100%': { opacity: '0', transform: 'translateX(100%)' },
+        },
         slideInLeft: {
           '0%':   { opacity: '0', transform: 'translateX(-12px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        slideInRight: {
+          '0%':   { opacity: '0', transform: 'translateX(100%)' },
           '100%': { opacity: '1', transform: 'translateX(0)' },
         },
         shimmer: {

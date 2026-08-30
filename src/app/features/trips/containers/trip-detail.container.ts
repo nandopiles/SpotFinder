@@ -1,11 +1,12 @@
-import { Component, ChangeDetectionStrategy, OnInit, inject, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed } from '@angular/core';
 import { Router } from '@angular/router';
 import { TripStore } from '../../../core/services/trip.store';
 import { MapSyncService } from '../../../core/services/map-sync.service';
+import { UiStateService } from '../../../core/services/ui-state.service';
 import { TimelineComponent } from '../components/timeline.component';
 import { MapComponent } from '../../map/components/map.component';
 import { SpinnerComponent } from '../../../shared/components/spinner.component';
-import { ReorderSpotsDto, TripStatus } from '../../../core/models/trip.model';
+import { ReorderSpotsDto, TripStatus, UpdateTripDto } from '../../../core/models/trip.model';
 
 const STATUS_COLORS: Record<TripStatus, { badge: string; dot: string }> = {
   draft:     { badge: 'bg-surface-subtle text-ink-muted',         dot: 'bg-ink-faint' },
@@ -63,22 +64,30 @@ const STATUS_LABELS: Record<TripStatus, string> = {
                   {{ store.selectedTrip()!.date }}
                 </p>
               </div>
-
               <span class="badge shrink-0 hidden sm:inline-flex gap-1.5 {{ statusColor().badge }}">
                 <span class="w-1.5 h-1.5 rounded-full shrink-0 {{ statusColor().dot }}"></span>
                 {{ statusLabel() }}
               </span>
             </div>
 
-            <!-- Spot count chip -->
-            <div class="shrink-0 hidden sm:flex items-center gap-1.5 px-3 py-1.5
-                        rounded-xl bg-surface-subtle border border-surface-border text-xs">
-              <svg class="w-3.5 h-3.5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-              </svg>
-              <span class="font-semibold text-ink">{{ store.orderedSpots().length }}</span>
-              <span class="text-ink-muted">paradas</span>
+            <!-- Acciones -->
+            <div class="flex items-center gap-2 shrink-0">
+              <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5
+                          rounded-xl bg-surface-subtle border border-surface-border text-xs">
+                <svg class="w-3.5 h-3.5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                </svg>
+                <span class="font-semibold text-ink">{{ store.orderedSpots().length }}</span>
+                <span class="text-ink-muted">paradas</span>
+              </div>
+              <button class="btn-ghost text-xs py-1.5 px-3 gap-1.5" (click)="openEditPanel()">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                Editar
+              </button>
             </div>
           </div>
         </div>
@@ -87,14 +96,15 @@ const STATUS_LABELS: Record<TripStatus, string> = {
         <div class="flex flex-1 overflow-hidden">
 
           <!-- Timeline panel -->
-          <aside class="w-80 xl:w-96 shrink-0 flex flex-col bg-surface-muted
-                        border-r border-surface-border overflow-hidden">
+          <aside class="w-80 xl:w-96 shrink-0 flex flex-col bg-surface
+                        border-r border-surface-border overflow-hidden
+                        relative" style="z-index: 500; box-shadow: 2px 0 12px -2px rgb(0 0 0 / 0.12)">
 
             <!-- Panel header -->
             <div class="px-4 pt-4 pb-2 shrink-0">
               <div class="flex items-center justify-between">
                 <h3 class="text-sm font-bold text-ink">Itinerario</h3>
-            <button class="btn-ghost text-xs py-1.5 px-2.5 text-primary-500 hover:bg-primary-500/10">
+                <button class="btn-ghost text-xs py-1.5 px-2.5 text-primary-500 hover:bg-primary-500/10">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                   </svg>
@@ -117,7 +127,7 @@ const STATUS_LABELS: Record<TripStatus, string> = {
           </aside>
 
           <!-- Map panel -->
-          <div class="flex-1 relative bg-surface-subtle">
+          <div class="flex-1 relative bg-surface-subtle" style="isolation: isolate">
             <app-map
               [spots]="store.orderedSpots()"
               [center]="store.selectedTrip()!.centerCoordinates"
@@ -172,12 +182,13 @@ const STATUS_LABELS: Record<TripStatus, string> = {
     }
   `,
 })
-export class TripDetailContainer implements OnInit {
+export class TripDetailContainer implements OnInit, OnDestroy {
   readonly id = input.required<string>();
 
-  protected readonly store = inject(TripStore);
+  protected readonly store   = inject(TripStore);
   protected readonly mapSync = inject(MapSyncService);
-  private readonly router = inject(Router);
+  private readonly router    = inject(Router);
+  private readonly ui        = inject(UiStateService);
 
   readonly selectedSpot = computed(() => {
     const id = this.mapSync.selectedSpotId();
@@ -197,8 +208,28 @@ export class TripDetailContainer implements OnInit {
     this.store.loadTrip(this.id());
   }
 
+  ngOnDestroy(): void {
+    this.ui.editPanelState.set('closed');
+    this.ui.editPanelTrip.set(null);
+    this.ui.editPanelSave.set(null);
+  }
+
+  openEditPanel(): void {
+    const trip = this.store.selectedTrip();
+    if (!trip) return;
+    this.ui.editPanelTrip.set(trip);
+    this.ui.editPanelSave.set((dto: UpdateTripDto) => this.onUpdate(dto));
+    this.ui.editPanelState.set('open');
+  }
+
   goBack(): void {
     this.router.navigate(['/trips']);
+  }
+
+  async onUpdate(dto: UpdateTripDto): Promise<void> {
+    const tripId = this.store.selectedTripId();
+    if (!tripId) return;
+    await this.store.updateTrip(tripId, dto);
   }
 
   async onReorder(dto: ReorderSpotsDto): Promise<void> {

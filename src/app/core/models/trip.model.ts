@@ -33,6 +33,8 @@ export interface Trip {
   title: string;
   date: string;
   city: string;
+  icon: string;
+  color: string;
   centerCoordinates: Coordinates;
   status: TripStatus;
   spots: ActivitySpot[];

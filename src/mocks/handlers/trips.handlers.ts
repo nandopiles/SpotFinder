@@ -11,7 +11,14 @@ function getTrips(): Trip[] {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_TRIPS));
     return structuredClone(SEED_TRIPS);
   }
-  return JSON.parse(raw) as Trip[];
+  const trips = JSON.parse(raw) as Trip[];
+  // Reset if cached data is missing new fields
+  const needsMigration = trips.some(t => !t.icon || !t.color);
+  if (needsMigration) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_TRIPS));
+    return structuredClone(SEED_TRIPS);
+  }
+  return trips;
 }
 
 function saveTrips(trips: Trip[]): void {
