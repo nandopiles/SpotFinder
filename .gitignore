@@ -39,3 +39,9 @@ $RECYCLE.BIN/
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/
+
+# ─── Personal ────────────────────────────────────────────────────────────────
+SpotFinder_Diary.txt
+
+# ─── Amazon Q ────────────────────────────────────────────────────────────────
+.amazonq/
