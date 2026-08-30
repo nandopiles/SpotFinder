@@ -55,14 +55,6 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                   </svg>
                   Nuevo viaje
                 </button>
-                @if (store.trips().length) {
-                  <a class="btn-ghost" (click)="scrollToTrips()">
-                    Ver mis viajes
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                  </a>
-                }
               </div>
             </div>
 
@@ -129,24 +121,20 @@ import { CreateTripDto } from '../../../core/models/trip.model';
             <div class="skeleton h-4 w-32 rounded-lg mb-6"></div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               @for (_ of skeletons; track $index) {
-                <div class="card overflow-hidden flex">
-                  <!-- Barra lateral -->
-                  <div class="w-1 shrink-0 skeleton rounded-none"></div>
-                  <!-- Contenido -->
-                  <div class="flex-1 p-4 flex flex-col gap-3">
-                    <!-- Fila superior -->
-                    <div class="flex items-start gap-3">
-                      <div class="skeleton w-10 h-10 rounded-xl shrink-0"></div>
-                      <div class="flex-1 pt-0.5 space-y-2">
-                        <div class="skeleton h-3.5 w-3/4 rounded-md"></div>
-                        <div class="skeleton h-3 w-1/3 rounded-md"></div>
-                      </div>
+                <div class="card overflow-hidden flex flex-col">
+                  <div class="skeleton h-28 rounded-none rounded-t-2xl"></div>
+                  <div class="p-4 flex flex-col gap-3">
+                    <div class="space-y-2">
+                      <div class="skeleton h-4 w-3/4 rounded-md"></div>
+                      <div class="skeleton h-3 w-1/3 rounded-md"></div>
                     </div>
-                    <!-- Chips -->
-                    <div class="flex gap-2">
-                      <div class="skeleton h-6 w-20 rounded-lg"></div>
-                      <div class="skeleton h-6 w-16 rounded-lg"></div>
-                      <div class="skeleton h-6 w-14 rounded-lg"></div>
+                    <div class="skeleton h-px w-full rounded-full"></div>
+                    <div class="flex justify-between">
+                      <div class="flex gap-3">
+                        <div class="skeleton h-4 w-16 rounded-md"></div>
+                        <div class="skeleton h-4 w-16 rounded-md"></div>
+                      </div>
+                      <div class="skeleton h-6 w-12 rounded-lg"></div>
                     </div>
                   </div>
                 </div>

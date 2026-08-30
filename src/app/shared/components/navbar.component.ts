@@ -35,7 +35,7 @@ import { ThemeService } from '../../core/services/theme.service';
           >
             <!-- Sol -->
             <svg
-              class="w-4 h-4 absolute transition-all duration-300"
+              class="w-5 h-5 absolute transition-all duration-300"
               [style.opacity]="theme.isDark() ? '1' : '0'"
               [style.transform]="theme.isDark() ? 'rotate(0deg) scale(1)' : 'rotate(-90deg) scale(0.5)'"
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -45,7 +45,7 @@ import { ThemeService } from '../../core/services/theme.service';
             </svg>
             <!-- Luna -->
             <svg
-              class="w-4 h-4 absolute transition-all duration-300"
+              class="w-5 h-5 absolute transition-all duration-300"
               [style.opacity]="theme.isDark() ? '0' : '1'"
               [style.transform]="theme.isDark() ? 'rotate(90deg) scale(0.5)' : 'rotate(0deg) scale(1)'"
               fill="none" stroke="currentColor" viewBox="0 0 24 24"

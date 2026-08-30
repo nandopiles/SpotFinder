@@ -19,16 +19,15 @@
 }
 
 .dark {
-  /* Fondo base más cálido/azulado, no negro puro */
-  --color-surface:              #1c1a2e;  /* cards — capa alta */
-  --color-surface-muted:        #13111f;  /* fondo de página — capa baja */
-  --color-surface-subtle:       #242136;  /* chips, inputs, hover */
-  --color-surface-border:       #2f2c47;  /* bordes sutiles */
-  --color-surface-border-strong:#46426a;  /* bordes visibles */
+  --color-surface:              #252338;  /* cards — más claro para contrastar con el fondo */
+  --color-surface-muted:        #0f0d1a;  /* fondo de página — más oscuro para más contraste */
+  --color-surface-subtle:       #2e2b44;  /* chips, inputs, hover */
+  --color-surface-border:       #38354f;  /* bordes sutiles */
+  --color-surface-border-strong:#524e78;  /* bordes visibles */
   --color-ink:                  #f0effe;  /* texto principal */
   --color-ink-secondary:        #c4c2e0;  /* texto secundario */
-  --color-ink-muted:            #8a88aa;  /* texto terciario */
-  --color-ink-faint:            #3e3b5c;  /* texto fantasma / separadores */
+  --color-ink-muted:            #9896b8;  /* texto terciario */
+  --color-ink-faint:            #6b6890;  /* texto fantasma — más claro para ser legible */
 }
 
 /* ─── View Transition (theme toggle) ────────────────────────────────────────── */
@@ -136,7 +135,7 @@
   /* Cards */
   .card {
     @apply bg-surface rounded-2xl border border-surface-border;
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.12), 0 1px 2px -1px rgb(0 0 0 / 0.08);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.15);
   }
 
   .card-interactive {
@@ -144,11 +143,11 @@
   }
   .card-interactive:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.18), 0 2px 8px -2px rgb(0 0 0 / 0.1);
+    box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.35), 0 0 0 1px rgb(99 102 241 / 0.2);
   }
   .card-interactive:active {
     transform: translateY(0);
-    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.15);
+    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.25);
   }
 
   /* Inputs */

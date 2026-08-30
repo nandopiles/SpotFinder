@@ -26,8 +26,8 @@ const ORDER_COLORS = [
     <div
       class="group relative bg-surface rounded-2xl border cursor-pointer select-none overflow-hidden
              transition-all duration-200"
-      [class.border-surface-border]="!isSelected() && !isHovered()"
-      [class.border-primary-300]="isHovered() && !isSelected()"
+      [class.border-surface-border-strong]="!isSelected() && !isHovered()"
+      [class.border-primary-400]="isHovered() && !isSelected()"
       [class.border-primary-500]="isSelected()"
       [class.shadow-card]="!isHovered() && !isSelected()"
       [class.shadow-card-hover]="isHovered() || isSelected()"
@@ -130,7 +130,7 @@ export class SpotCardComponent {
   );
 
   readonly categoryBadgeBg = computed(() =>
-    CATEGORY_COLORS[this.spot().category] + '1a'   // hex opacity 10%
+    CATEGORY_COLORS[this.spot().category] + '33'   // hex opacity 20%
   );
 
   readonly categoryBadgeColor = computed(() =>
