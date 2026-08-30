@@ -7,10 +7,10 @@ import { MapComponent } from '../../map/components/map.component';
 import { SpinnerComponent } from '../../../shared/components/spinner.component';
 import { ReorderSpotsDto, TripStatus } from '../../../core/models/trip.model';
 
-const STATUS_COLORS: Record<TripStatus, string> = {
-  draft:     'bg-slate-100 text-slate-600',
-  planned:   'bg-primary-100 text-primary-700',
-  completed: 'bg-emerald-100 text-emerald-700',
+const STATUS_COLORS: Record<TripStatus, { badge: string; dot: string }> = {
+  draft:     { badge: 'bg-surface-subtle text-ink-muted',         dot: 'bg-ink-faint' },
+  planned:   { badge: 'bg-primary-500/10 text-primary-400',       dot: 'bg-primary-500' },
+  completed: { badge: 'bg-emerald-500/10 text-emerald-400',       dot: 'bg-emerald-500' },
 };
 
 const STATUS_LABELS: Record<TripStatus, string> = {
@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<TripStatus, string> = {
       <div class="flex flex-col h-[calc(100vh-3.5rem)]">
 
         <!-- Contextual header -->
-        <div class="bg-white border-b border-surface-border shrink-0">
+        <div class="bg-surface border-b border-surface-border shrink-0">
           <div class="px-4 sm:px-6 py-3 flex items-center gap-3">
 
             <!-- Back button -->
@@ -64,7 +64,8 @@ const STATUS_LABELS: Record<TripStatus, string> = {
                 </p>
               </div>
 
-              <span class="badge shrink-0 {{ statusColor() }} hidden sm:inline-flex">
+              <span class="badge shrink-0 hidden sm:inline-flex gap-1.5 {{ statusColor().badge }}">
+                <span class="w-1.5 h-1.5 rounded-full shrink-0 {{ statusColor().dot }}"></span>
                 {{ statusLabel() }}
               </span>
             </div>
@@ -93,7 +94,7 @@ const STATUS_LABELS: Record<TripStatus, string> = {
             <div class="px-4 pt-4 pb-2 shrink-0">
               <div class="flex items-center justify-between">
                 <h3 class="text-sm font-bold text-ink">Itinerario</h3>
-                <button class="btn-ghost text-xs py-1.5 px-2.5 text-primary-600 hover:bg-primary-50">
+            <button class="btn-ghost text-xs py-1.5 px-2.5 text-primary-500 hover:bg-primary-500/10">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                   </svg>
@@ -129,7 +130,7 @@ const STATUS_LABELS: Record<TripStatus, string> = {
             <!-- Selected spot overlay -->
             @if (selectedSpot()) {
               <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[400]
-                          bg-white rounded-2xl shadow-modal border border-surface-border
+                          bg-surface rounded-2xl shadow-modal border border-surface-border
                           px-4 py-3 flex items-center gap-3 min-w-64 max-w-sm
                           animate-fade-up">
                 <div class="w-8 h-8 rounded-xl bg-primary-600 text-white text-xs font-bold

@@ -1,6 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./src/**/*.{html,ts}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -28,17 +29,17 @@ module.exports = {
           700: '#a21caf',
         },
         surface: {
-          DEFAULT: '#ffffff',
-          muted:   '#f8f7ff',
-          subtle:  '#f1f0fe',
-          border:  '#e5e4f0',
-          'border-strong': '#c7c5e0',
+          DEFAULT:       'var(--color-surface)',
+          muted:         'var(--color-surface-muted)',
+          subtle:        'var(--color-surface-subtle)',
+          border:        'var(--color-surface-border)',
+          'border-strong': 'var(--color-surface-border-strong)',
         },
         ink: {
-          DEFAULT: '#1a1830',
-          secondary: '#4a4869',
-          muted: '#8b89a8',
-          faint: '#c5c4d8',
+          DEFAULT:   'var(--color-ink)',
+          secondary: 'var(--color-ink-secondary)',
+          muted:     'var(--color-ink-muted)',
+          faint:     'var(--color-ink-faint)',
         },
       },
       fontFamily: {

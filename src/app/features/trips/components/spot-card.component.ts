@@ -24,7 +24,7 @@ const ORDER_COLORS = [
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div
-      class="group relative bg-white rounded-2xl border cursor-pointer select-none overflow-hidden
+      class="group relative bg-surface rounded-2xl border cursor-pointer select-none overflow-hidden
              transition-all duration-200"
       [class.border-surface-border]="!isSelected() && !isHovered()"
       [class.border-primary-300]="isHovered() && !isSelected()"
@@ -34,6 +34,7 @@ const ORDER_COLORS = [
       [class.ring-2]="isSelected()"
       [class.ring-primary-500]="isSelected()"
       [class.ring-offset-2]="isSelected()"
+      [class.ring-offset-surface]="isSelected()"
       (mouseenter)="hover.emit(spot().id)"
       (mouseleave)="hover.emit(null)"
       (click)="select.emit(spot().id)"

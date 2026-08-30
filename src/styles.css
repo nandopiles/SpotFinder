@@ -5,6 +5,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Theme tokens ──────────────────────────────────────────────────────────── */
+:root {
+  --color-surface:              #ffffff;
+  --color-surface-muted:        #f8f7ff;
+  --color-surface-subtle:       #f1f0fe;
+  --color-surface-border:       #e5e4f0;
+  --color-surface-border-strong:#c7c5e0;
+  --color-ink:                  #1a1830;
+  --color-ink-secondary:        #4a4869;
+  --color-ink-muted:            #8b89a8;
+  --color-ink-faint:            #c5c4d8;
+}
+
+.dark {
+  /* Fondo base más cálido/azulado, no negro puro */
+  --color-surface:              #1c1a2e;  /* cards — capa alta */
+  --color-surface-muted:        #13111f;  /* fondo de página — capa baja */
+  --color-surface-subtle:       #242136;  /* chips, inputs, hover */
+  --color-surface-border:       #2f2c47;  /* bordes sutiles */
+  --color-surface-border-strong:#46426a;  /* bordes visibles */
+  --color-ink:                  #f0effe;  /* texto principal */
+  --color-ink-secondary:        #c4c2e0;  /* texto secundario */
+  --color-ink-muted:            #8a88aa;  /* texto terciario */
+  --color-ink-faint:            #3e3b5c;  /* texto fantasma / separadores */
+}
+
+/* ─── View Transition (theme toggle) ────────────────────────────────────────── */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
 /* ─── Base ──────────────────────────────────────────────────────────────────── */
 @layer base {
   *, *::before, *::after { box-sizing: border-box; }
@@ -15,14 +56,20 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
     height: 100%;
     margin: 0;
-    background-color: #f8f7ff;
-    color: #1a1830;
+    background-color: var(--color-surface-muted);
+    color: var(--color-ink);
     font-family: 'Inter', system-ui, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   ::selection {
@@ -36,14 +83,14 @@
     border-radius: 6px;
   }
 
-  /* Scrollbar personalizado */
+  /* Scrollbar */
   ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: #c7c5e0;
+    background: var(--color-surface-border-strong);
     border-radius: 99px;
   }
-  ::-webkit-scrollbar-thumb:hover { background: #8b89a8; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
 }
 
 /* ─── Components ────────────────────────────────────────────────────────────── */
@@ -88,20 +135,26 @@
 
   /* Cards */
   .card {
-    @apply bg-white rounded-2xl shadow-card border border-surface-border;
+    @apply bg-surface rounded-2xl border border-surface-border;
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.12), 0 1px 2px -1px rgb(0 0 0 / 0.08);
   }
 
   .card-interactive {
-    @apply card cursor-pointer
-           hover:shadow-card-hover hover:-translate-y-0.5
-           active:shadow-card-active active:translate-y-0
-           transition-all duration-200 ease-smooth;
+    @apply card cursor-pointer transition-all duration-200 ease-smooth;
+  }
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.18), 0 2px 8px -2px rgb(0 0 0 / 0.1);
+  }
+  .card-interactive:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px -2px rgb(0 0 0 / 0.15);
   }
 
   /* Inputs */
   .input {
     @apply w-full px-3.5 py-2.5 text-sm text-ink
-           bg-white border border-surface-border rounded-xl
+           bg-surface border border-surface-border rounded-xl
            shadow-inner-sm
            placeholder:text-ink-faint
            focus:outline-none focus:border-primary-400 focus:ring-2 focus:ring-primary-400/20
@@ -130,7 +183,10 @@
 
   /* Glass effect */
   .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/60;
+    background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: color-mix(in srgb, var(--color-surface) 60%, transparent);
   }
 
   /* Section header */
@@ -148,7 +204,8 @@
 .leaflet-popup-content-wrapper {
   border-radius: 12px !important;
   box-shadow: 0 8px 24px -4px rgb(0 0 0 / 0.15) !important;
-  border: 1px solid #e5e4f0;
+  border: 1px solid var(--color-surface-border);
+  background: var(--color-surface) !important;
   padding: 0 !important;
 }
 
@@ -157,16 +214,16 @@
   padding: 12px 16px !important;
   font-size: 13px !important;
   line-height: 1.5 !important;
-  color: #1a1830 !important;
+  color: var(--color-ink) !important;
 }
 
 .leaflet-popup-tip-container { display: none; }
 
 .leaflet-tooltip {
-  background: #1a1830 !important;
+  background: var(--color-ink) !important;
   border: none !important;
   border-radius: 8px !important;
-  color: white !important;
+  color: var(--color-surface) !important;
   font-size: 12px !important;
   font-weight: 500 !important;
   padding: 6px 10px !important;
@@ -184,10 +241,10 @@
 }
 
 .leaflet-control-zoom a {
-  background: white !important;
-  color: #4a4869 !important;
+  background: var(--color-surface) !important;
+  color: var(--color-ink-secondary) !important;
   border: none !important;
-  border-bottom: 1px solid #e5e4f0 !important;
+  border-bottom: 1px solid var(--color-surface-border) !important;
   width: 36px !important;
   height: 36px !important;
   line-height: 36px !important;
@@ -195,16 +252,16 @@
   transition: background 0.15s;
 }
 
-.leaflet-control-zoom a:hover { background: #f8f7ff !important; }
+.leaflet-control-zoom a:hover { background: var(--color-surface-subtle) !important; }
 .leaflet-control-zoom-out { border-bottom: none !important; }
 
 .leaflet-attribution-flag { display: none !important; }
 .leaflet-control-attribution {
-  background: rgb(255 255 255 / 0.8) !important;
+  background: color-mix(in srgb, var(--color-surface) 80%, transparent) !important;
   backdrop-filter: blur(4px);
   border-radius: 8px 0 0 0 !important;
   font-size: 10px !important;
-  color: #8b89a8 !important;
+  color: var(--color-ink-muted) !important;
   padding: 3px 8px !important;
 }
 
@@ -217,8 +274,10 @@
 /* ─── CDK Drag & Drop ───────────────────────────────────────────────────────── */
 .cdk-drag-preview {
   border-radius: 16px;
-  box-shadow: 0 16px 40px -8px rgb(79 70 229 / 0.2), 0 4px 12px -2px rgb(0 0 0 / 0.08);
+  box-shadow: 0 16px 40px -8px rgb(0 0 0 / 0.3), 0 4px 12px -2px rgb(0 0 0 / 0.15);
   opacity: 0.96;
+  background: var(--color-surface);
+  border: 1px solid var(--color-surface-border);
 }
 
 .cdk-drag-animating {

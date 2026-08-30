@@ -11,7 +11,7 @@ import { Component, ChangeDetectionStrategy, input, output } from '@angular/core
       (click)="onBackdropClick($event)"
     >
       <div
-        class="relative w-full max-w-xs bg-white rounded-2xl shadow-modal animate-scale-in"
+        class="relative w-full max-w-xs bg-surface rounded-2xl shadow-modal animate-scale-in"
         (click)="$event.stopPropagation()"
       >
         <div class="px-7 pt-8 pb-7">
@@ -28,8 +28,8 @@ import { Component, ChangeDetectionStrategy, input, output } from '@angular/core
           </div>
 
           <!-- Texto -->
-          <h3 class="text-base font-semibold mb-1" style="color: #1a1830">{{ title() }}</h3>
-          <p class="text-sm leading-relaxed mb-7" style="color: #9896b4">{{ description() }}</p>
+          <h3 class="text-base font-semibold mb-1 text-ink">{{ title() }}</h3>
+          <p class="text-sm leading-relaxed mb-7 text-ink-muted">{{ description() }}</p>
 
           <!-- Acciones -->
           <div class="flex flex-col gap-2">
@@ -43,8 +43,7 @@ import { Component, ChangeDetectionStrategy, input, output } from '@angular/core
               {{ confirmLabel() }}
             </button>
             <button
-              class="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150"
-              style="color: #6b6987"
+              class="w-full py-2.5 rounded-xl text-sm font-medium transition-colors duration-150 text-ink-muted"
               (mouseenter)="onCancelHover($event, true)"
               (mouseleave)="onCancelHover($event, false)"
               (click)="cancel.emit()"
@@ -75,6 +74,6 @@ export class ConfirmModalComponent {
   }
 
   onCancelHover(event: MouseEvent, entering: boolean): void {
-    (event.currentTarget as HTMLElement).style.background = entering ? '#f5f4fb' : 'transparent';
+    (event.currentTarget as HTMLElement).style.background = entering ? 'var(--color-surface-subtle)' : 'transparent';
   }
 }

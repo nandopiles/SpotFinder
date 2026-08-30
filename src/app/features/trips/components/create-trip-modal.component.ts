@@ -14,12 +14,12 @@ import { CreateTripDto } from '../../../core/models/trip.model';
       (click)="onBackdropClick($event)"
     >
       <div
-        class="relative w-full sm:max-w-md bg-white rounded-t-2xl sm:rounded-2xl shadow-modal animate-fade-up"
+        class="relative w-full sm:max-w-md bg-surface rounded-t-2xl sm:rounded-2xl shadow-modal animate-fade-up"
         (click)="$event.stopPropagation()"
       >
         <!-- Handle (mobile) -->
         <div class="flex justify-center pt-3 sm:hidden">
-          <div class="w-8 h-1 rounded-full" style="background: #e2e1f0"></div>
+          <div class="w-8 h-1 rounded-full bg-surface-border"></div>
         </div>
 
         <div class="px-6 pt-5 pb-6 sm:pt-6">
@@ -36,8 +36,8 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                 </svg>
               </div>
               <div>
-                <h2 class="text-base font-semibold" style="color: #1a1830">Nuevo viaje</h2>
-                <p class="text-xs" style="color: #9896b4">¿A dónde vamos?</p>
+                <h2 class="text-base font-semibold text-ink">Nuevo viaje</h2>
+                <p class="text-xs text-ink-muted">¿A dónde vamos?</p>
               </div>
             </div>
             <button class="btn-icon" (click)="cancel.emit()">

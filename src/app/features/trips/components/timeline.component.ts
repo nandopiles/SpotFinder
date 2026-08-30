@@ -51,8 +51,8 @@ import { SpotCardComponent } from './spot-card.component';
 
           <!-- CDK placeholder -->
           <ng-template cdkDragPlaceholder>
-            <div class="h-[72px] rounded-2xl border-2 border-dashed border-primary-300
-                        bg-primary-50/50 mx-0 my-0.5 flex items-center justify-center">
+            <div class="h-[72px] rounded-2xl border-2 border-dashed border-primary-500/30
+                        bg-primary-500/5 mx-0 my-0.5 flex items-center justify-center">
               <p class="text-xs text-primary-400 font-medium">Soltar aquí</p>
             </div>
           </ng-template>

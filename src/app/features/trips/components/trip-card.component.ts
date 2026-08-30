@@ -7,9 +7,9 @@ const CITY_COLORS: string[] = [
 ];
 
 const STATUS_META: Record<TripStatus, { label: string; color: string; bg: string; dot: string }> = {
-  draft:     { label: 'Borrador',    color: '#64748b', bg: '#f1f5f9', dot: '#94a3b8' },
-  planned:   { label: 'Planificado', color: '#4338ca', bg: '#eef2ff', dot: '#6366f1' },
-  completed: { label: 'Completado',  color: '#065f46', bg: '#ecfdf5', dot: '#10b981' },
+  draft:     { label: 'Borrador',    color: 'var(--color-ink-muted)',  bg: 'var(--color-surface-subtle)', dot: 'var(--color-ink-faint)' },
+  planned:   { label: 'Planificado', color: '#818cf8',                 bg: 'rgba(99,102,241,0.12)',        dot: '#6366f1' },
+  completed: { label: 'Completado',  color: '#34d399',                 bg: 'rgba(16,185,129,0.12)',        dot: '#10b981' },
 };
 
 function cityColor(city: string): string {
@@ -43,9 +43,8 @@ function cityColor(city: string): string {
 
           <!-- Título + ciudad -->
           <div class="flex-1 min-w-0 pt-0.5">
-            <h3 class="font-semibold text-sm leading-tight line-clamp-1"
-                style="color: #1a1830">{{ trip().title }}</h3>
-            <p class="text-xs mt-0.5 flex items-center gap-1" style="color: #8b89a8">
+            <h3 class="font-semibold text-sm leading-tight line-clamp-1 text-ink">{{ trip().title }}</h3>
+            <p class="text-xs mt-0.5 flex items-center gap-1 text-ink-muted">
               <svg style="width:10px;height:10px;flex-shrink:0" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
               </svg>
@@ -57,7 +56,7 @@ function cityColor(city: string): string {
           <button
             class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0
                    transition-colors duration-150"
-            style="color: #d1d0e8"
+            [style.color]="'var(--color-ink-faint)'"
             (mouseenter)="onDeleteHover($event, true)"
             (mouseleave)="onDeleteHover($event, false)"
             (click)="$event.stopPropagation(); delete.emit(trip().id)"
@@ -82,8 +81,8 @@ function cityColor(city: string): string {
           </span>
 
           <!-- Fecha -->
-          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs"
-                style="background: #f8f7ff; color: #8b89a8">
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs
+                       bg-surface-subtle text-ink-muted">
             <svg style="width:10px;height:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -92,19 +91,18 @@ function cityColor(city: string): string {
           </span>
 
           <!-- Paradas -->
-          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs"
-                style="background: #f8f7ff; color: #8b89a8">
+          <span class="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs
+                       bg-surface-subtle text-ink-muted">
             <svg style="width:10px;height:10px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
             </svg>
-            <strong style="color: #4a4869; font-weight: 600">{{ trip().spots.length }}</strong>
+            <strong class="text-ink-secondary font-semibold">{{ trip().spots.length }}</strong>
             &nbsp;parada{{ trip().spots.length !== 1 ? 's' : '' }}
           </span>
 
           <!-- Flecha -->
-          <span class="ml-auto text-xs font-semibold flex items-center gap-0.5"
-                style="color: #6366f1">
+          <span class="ml-auto text-xs font-semibold flex items-center gap-0.5 text-primary-500">
             Ver
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
@@ -125,7 +123,7 @@ export class TripCardComponent {
 
   onDeleteHover(event: MouseEvent, entering: boolean): void {
     const el = event.currentTarget as HTMLElement;
-    el.style.color      = entering ? '#ef4444' : '#d1d0e8';
+    el.style.color      = entering ? '#ef4444' : 'var(--color-ink-faint)';
     el.style.background = entering ? '#fef2f2' : 'transparent';
   }
 }
