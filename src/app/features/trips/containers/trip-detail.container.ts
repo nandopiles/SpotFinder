@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TripStore } from '../../../core/services/trip.store';
 import { MapSyncService } from '../../../core/services/map-sync.service';
@@ -6,7 +6,8 @@ import { UiStateService } from '../../../core/services/ui-state.service';
 import { TimelineComponent } from '../components/timeline.component';
 import { MapComponent } from '../../map/components/map.component';
 import { SpinnerComponent } from '../../../shared/components/spinner.component';
-import { ReorderSpotsDto, TripStatus, UpdateTripDto } from '../../../core/models/trip.model';
+import { AddSpotModalComponent } from '../components/add-spot-modal.component';
+import { ReorderSpotsDto, TripStatus, UpdateTripDto, CreateSpotDto } from '../../../core/models/trip.model';
 
 const STATUS_COLORS: Record<TripStatus, { badge: string; dot: string }> = {
   draft:     { badge: 'bg-surface-subtle text-ink-muted',         dot: 'bg-ink-faint' },
@@ -21,7 +22,7 @@ const STATUS_LABELS: Record<TripStatus, string> = {
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [TimelineComponent, MapComponent, SpinnerComponent],
+  imports: [TimelineComponent, MapComponent, SpinnerComponent, AddSpotModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.isLoading()) {
@@ -104,7 +105,8 @@ const STATUS_LABELS: Record<TripStatus, string> = {
             <div class="px-4 pt-4 pb-2 shrink-0">
               <div class="flex items-center justify-between">
                 <h3 class="text-sm font-bold text-ink">Itinerario</h3>
-                <button class="btn-ghost text-xs py-1.5 px-2.5 text-primary-500 hover:bg-primary-500/10">
+                <button class="btn-ghost text-xs py-1.5 px-2.5 text-primary-500 hover:bg-primary-500/10"
+                        (click)="showAddSpot.set(true)">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                   </svg>
@@ -165,6 +167,13 @@ const STATUS_LABELS: Record<TripStatus, string> = {
         </div>
       </div>
 
+      @if (showAddSpot()) {
+        <app-add-spot-modal
+          (confirm)="onAddSpot($event)"
+          (cancel)="showAddSpot.set(false)"
+        />
+      }
+
     } @else {
       <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 animate-fade-up">
         <div class="w-16 h-16 rounded-2xl bg-surface-subtle flex items-center justify-center">
@@ -189,6 +198,8 @@ export class TripDetailContainer implements OnInit, OnDestroy {
   protected readonly mapSync = inject(MapSyncService);
   private readonly router    = inject(Router);
   private readonly ui        = inject(UiStateService);
+
+  readonly showAddSpot = signal(false);
 
   readonly selectedSpot = computed(() => {
     const id = this.mapSync.selectedSpotId();
@@ -224,6 +235,13 @@ export class TripDetailContainer implements OnInit, OnDestroy {
 
   goBack(): void {
     this.router.navigate(['/trips']);
+  }
+
+  async onAddSpot(dto: CreateSpotDto): Promise<void> {
+    const tripId = this.store.selectedTripId();
+    if (!tripId) return;
+    await this.store.addSpot(tripId, dto);
+    this.showAddSpot.set(false);
   }
 
   async onUpdate(dto: UpdateTripDto): Promise<void> {

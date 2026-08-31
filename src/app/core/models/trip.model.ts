@@ -46,6 +46,7 @@ export interface Trip {
 export type CreateTripDto = Omit<Trip, 'id' | 'createdAt' | 'updatedAt'>;
 export type UpdateTripDto = Partial<CreateTripDto>;
 export type ReorderSpotsDto = { spotId: string; order: number }[];
+export type CreateSpotDto = Omit<ActivitySpot, 'id' | 'order'>;
 
 export const CATEGORY_META: Record<ActivityCategory, { label: string; color: string; emoji: string }> = {
   food:     { label: 'Gastronomía', color: 'bg-orange-100 text-orange-700', emoji: '🍽️' },

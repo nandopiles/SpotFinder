@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto } from '../models/trip.model';
+import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto, ActivitySpot, CreateSpotDto } from '../models/trip.model';
 
 type LoadingState = 'idle' | 'loading' | 'error';
 
@@ -80,6 +80,16 @@ export class TripStore {
     await firstValueFrom(this.http.delete(`${this.BASE}/${id}`));
     this.state.update(s => ({ ...s, trips: s.trips.filter(t => t.id !== id) }));
     if (untracked(this.selectedTripId) === id) this.selectedTripId.set(null);
+  }
+
+  async addSpot(tripId: string, dto: CreateSpotDto): Promise<void> {
+    const spot = await firstValueFrom(
+      this.http.post<ActivitySpot>(`${this.BASE}/${tripId}/spots`, dto)
+    );
+    this.state.update(s => ({
+      ...s,
+      trips: s.trips.map(t => t.id === tripId ? { ...t, spots: [...t.spots, spot] } : t),
+    }));
   }
 
   async reorderSpots(tripId: string, dto: ReorderSpotsDto): Promise<void> {

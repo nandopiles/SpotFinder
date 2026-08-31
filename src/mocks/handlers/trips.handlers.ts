@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto } from '../../app/core/models/trip.model';
+import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto, ActivitySpot, CreateSpotDto } from '../../app/core/models/trip.model';
 import { SEED_TRIPS } from '../data/seed';
 
 const STORAGE_KEY = 'msw_trips';
@@ -75,6 +75,22 @@ export const tripHandlers = [
     if (filtered.length === trips.length) return new HttpResponse(null, { status: 404 });
     saveTrips(filtered);
     return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post('/api/trips/:id/spots', async ({ params, request }) => {
+    await delay(LATENCY);
+    const trips = getTrips();
+    const idx = trips.findIndex(t => t.id === params['id']);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    const dto = await request.json() as CreateSpotDto;
+    const newSpot: ActivitySpot = {
+      ...dto,
+      id: `spot-${crypto.randomUUID()}`,
+      order: trips[idx].spots.length,
+    };
+    trips[idx] = { ...trips[idx], spots: [...trips[idx].spots, newSpot], updatedAt: now() };
+    saveTrips(trips);
+    return HttpResponse.json(newSpot, { status: 201 });
   }),
 
   http.patch('/api/trips/:id/spots/reorder', async ({ params, request }) => {
