@@ -2,13 +2,14 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar.component';
 import { EditTripPanelComponent } from './features/trips/components/edit-trip-panel.component';
+import { AddSpotModalComponent } from './features/trips/components/add-spot-modal.component';
 import { UiStateService } from './core/services/ui-state.service';
 import { UpdateTripDto } from './core/models/trip.model';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, EditTripPanelComponent],
+  imports: [RouterOutlet, NavbarComponent, EditTripPanelComponent, AddSpotModalComponent],
   template: `
     <!-- Blurred shell -->
     <div class="min-h-screen flex flex-col"
@@ -20,7 +21,7 @@ import { UpdateTripDto } from './core/models/trip.model';
       </main>
     </div>
 
-    <!-- Panel rendered outside blurred wrapper -->
+    <!-- Edit panel rendered outside blurred wrapper -->
     @if (ui.editPanelState() !== 'closed' && ui.editPanelTrip()) {
       <app-edit-trip-panel
         [trip]="ui.editPanelTrip()!"
@@ -29,13 +30,22 @@ import { UpdateTripDto } from './core/models/trip.model';
         (cancel)="close()"
       />
     }
+
+    <!-- Add spot modal rendered outside blurred wrapper -->
+    @if (ui.addSpotOpen()) {
+      <app-add-spot-modal
+        [bias]="ui.addSpotBias()"
+        (confirm)="onAddSpot($event)"
+        (cancel)="closeAddSpot()"
+      />
+    }
   `,
 })
 export class AppComponent {
   protected readonly ui = inject(UiStateService);
 
   protected isOpen(): boolean {
-    return this.ui.editPanelState() !== 'closed';
+    return this.ui.editPanelState() !== 'closed' || this.ui.addSpotOpen();
   }
 
   protected async onSave(dto: UpdateTripDto): Promise<void> {
@@ -48,5 +58,14 @@ export class AppComponent {
   protected close(): void {
     this.ui.editPanelState.set('closing');
     setTimeout(() => this.ui.editPanelState.set('closed'), 300);
+  }
+
+  protected onAddSpot(dto: import('./core/models/trip.model').CreateSpotDto): void {
+    this.ui.addSpotConfirm()?.call(null, dto);
+    this.closeAddSpot();
+  }
+
+  protected closeAddSpot(): void {
+    this.ui.addSpotOpen.set(false);
   }
 }
