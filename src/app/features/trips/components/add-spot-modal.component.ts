@@ -273,12 +273,19 @@ export class AddSpotModalComponent implements OnInit {
   readonly saving        = signal(false);
   readonly query         = signal('');
   readonly selectedPlace = signal<PlaceResult | null>(null);
+  readonly searching     = signal(false);
 
-  private readonly query$   = new Subject<string>();
-  private readonly results$ = this.photon.search(this.query$.asObservable(), this.bias);
+  private readonly query$ = new Subject<string>();
 
-  readonly searching = signal(false);
-  readonly results   = toSignal(this.results$, { initialValue: [] as PlaceResult[] });
+  // Una única tubería reactiva: query -> búsqueda -> resultados.
+  // El flag "searching" se gestiona dentro del stream (tap), no con subscribes manuales.
+  private readonly results$ = this.photon.search(
+    this.query$.asObservable(),
+    this.bias,
+    () => this.searching.set(false),
+  );
+
+  readonly results = toSignal(this.results$, { initialValue: [] as PlaceResult[] });
 
   readonly categoryOptions = CATEGORY_OPTIONS;
 
@@ -311,7 +318,6 @@ export class AddSpotModalComponent implements OnInit {
     this.query.set(s);
     this.searching.set(true);
     this.query$.next(s);
-    this.results$.subscribe(() => this.searching.set(false));
   }
 
   onQuery(event: Event): void {
@@ -319,11 +325,11 @@ export class AddSpotModalComponent implements OnInit {
     this.query.set(q);
     this.searching.set(q.trim().length >= 2);
     this.query$.next(q);
-    this.results$.subscribe(() => this.searching.set(false));
   }
 
   clearSearch(): void {
     this.query.set('');
+    this.searching.set(false);
     this.query$.next('');
   }
 

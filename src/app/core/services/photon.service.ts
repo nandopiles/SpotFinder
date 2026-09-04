@@ -1,6 +1,6 @@
 import { Injectable, inject, Signal } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { debounceTime, distinctUntilChanged, switchMap, map, catchError, of, firstValueFrom } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, map, catchError, of, finalize, firstValueFrom } from 'rxjs';
 import { Observable } from 'rxjs';
 import { Coordinates } from '../models/trip.model';
 
@@ -29,22 +29,39 @@ export class PhotonService {
   private readonly http = inject(HttpClient);
   private readonly HOST = 'https://photon.komoot.io';
 
-  search(query$: Observable<string>, bias?: Signal<Coordinates | undefined>): Observable<PlaceResult[]> {
+  /**
+   * Autocompletado de lugares. Recibe el stream de textos y devuelve un stream
+   * de resultados. `onDone` se invoca cada vez que termina una búsqueda (éxito,
+   * vacío o error) para que el llamante apague su indicador de "buscando".
+   */
+  search(
+    query$: Observable<string>,
+    bias?: Signal<Coordinates | undefined>,
+    onDone?: () => void,
+  ): Observable<PlaceResult[]> {
     return query$.pipe(
       debounceTime(300),
       distinctUntilChanged(),
       switchMap(q => {
-        if (q.trim().length < 2) return of([]);
-        let params = new HttpParams().set('q', q).set('limit', '6').set('lang', 'es');
+        if (q.trim().length < 2) {
+          onDone?.();
+          return of([] as PlaceResult[]);
+        }
+        // Nota: no se envía 'lang'; la instancia pública de Photon solo admite
+        // un conjunto limitado de idiomas y un valor no soportado (p.ej. 'es')
+        // devuelve 400. Se usa el idioma del navegador (accept-language).
+        let params = new HttpParams().set('q', q).set('limit', '6');
         const coords = bias?.();
-        if (coords) {
-          const delta = 0.5;
+        // Solo aplicar bias si las coordenadas son reales (no 0,0 por defecto)
+        if (coords && (coords.lat !== 0 || coords.lng !== 0)) {
           params = params
-            .set('bbox', `${coords.lng - delta},${coords.lat - delta},${coords.lng + delta},${coords.lat + delta}`);
+            .set('lat', String(coords.lat))
+            .set('lon', String(coords.lng));
         }
         return this.http.get<{ features: PhotonFeature[] }>(`${this.HOST}/api`, { params }).pipe(
           map(res => res.features.map(f => this.toPlaceResult(f))),
-          catchError(() => of([])),
+          catchError(() => of([] as PlaceResult[])),
+          finalize(() => onDone?.()),
         );
       }),
     );
@@ -55,11 +72,11 @@ export class PhotonService {
    * Se usa al hacer click en el mapa para añadir una parada.
    */
   async reverse(coords: Coordinates): Promise<PlaceResult> {
-    // El endpoint reverse cuelga de la raíz del host (/reverse), no de /api
+    // El endpoint reverse cuelga de la raíz del host (/reverse), no de /api.
+    // Sin 'lang' (la instancia pública no admite 'es' y devolvería 400).
     const params = new HttpParams()
       .set('lat', String(coords.lat))
-      .set('lon', String(coords.lng))
-      .set('lang', 'es');
+      .set('lon', String(coords.lng));
     try {
       const res = await firstValueFrom(
         this.http.get<{ features: PhotonFeature[] }>(`${this.HOST}/reverse`, { params })
