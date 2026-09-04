@@ -66,7 +66,8 @@ const ORDER_COLORS = [
             <span class="badge shrink-0 text-2xs"
                   [style.background]="categoryBadgeBg()"
                   [style.color]="categoryBadgeColor()">
-              {{ categoryMeta().emoji }}
+              <span>{{ categoryMeta().emoji }}</span>
+              <span class="hidden xl:inline">{{ categoryMeta().label }}</span>
             </span>
           </div>
 
@@ -81,16 +82,18 @@ const ORDER_COLORS = [
 
           <!-- Time chips -->
           <div class="flex items-center gap-2">
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg
-                         bg-surface-subtle text-2xs font-semibold text-ink-secondary">
+            <span class="chip tabular">
               <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
               {{ spot().startTime }}
             </span>
-            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg
-                         bg-surface-subtle text-2xs font-medium text-ink-muted">
+            <span class="chip text-ink-muted tabular">
+              <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
               {{ durationLabel() }}
             </span>
           </div>

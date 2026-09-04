@@ -22,23 +22,34 @@ function colorSecondary(hex: string): string {
   imports: [DatePipe],
   template: `
     <article
-      class="card-interactive overflow-hidden cursor-pointer flex flex-col"
+      class="group card-interactive overflow-hidden cursor-pointer flex flex-col"
       (click)="select.emit(trip().id)"
     >
       <!-- Header -->
-      <div class="relative h-28 shrink-0 overflow-hidden"
+      <div class="relative h-32 shrink-0 overflow-hidden"
            [style.background]="'linear-gradient(135deg, ' + color() + ' 0%, ' + color2() + ' 100%)'">
 
-        <div class="absolute inset-0 opacity-20"
-             style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 18px 18px;"></div>
+        <!-- Patrón de puntos -->
+        <div class="absolute inset-0 opacity-[0.18]"
+             style="background-image: radial-gradient(circle, white 1px, transparent 1px); background-size: 16px 16px;"></div>
 
-        <div class="absolute bottom-3 left-4 text-4xl select-none" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3))">
+        <!-- Brillo superior -->
+        <div class="absolute inset-x-0 top-0 h-16"
+             style="background: linear-gradient(180deg, rgba(255,255,255,0.22), transparent)"></div>
+
+        <!-- Glow tras el icono -->
+        <div class="absolute -bottom-6 left-2 w-24 h-24 rounded-full"
+             style="background: radial-gradient(circle, rgba(255,255,255,0.35) 0%, transparent 70%)"></div>
+
+        <div class="absolute bottom-3 left-4 text-4xl select-none transition-transform duration-300 group-hover:scale-110"
+             style="filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35))">
           {{ trip().icon }}
         </div>
 
         <button
-          class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150"
-          style="background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.7)"
+          class="absolute top-2.5 right-2.5 w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-150
+                 opacity-0 group-hover:opacity-100"
+          style="background: rgba(0,0,0,0.28); color: rgba(255,255,255,0.9)"
           (mouseenter)="onDeleteHover($event, true)"
           (mouseleave)="onDeleteHover($event, false)"
           (click)="$event.stopPropagation(); delete.emit(trip().id)"
@@ -51,9 +62,9 @@ function colorSecondary(hex: string): string {
         </button>
 
         <div class="absolute top-2.5 left-3">
-          <span class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-semibold"
-                style="background: rgba(0,0,0,0.25); color: rgba(255,255,255,0.95)">
-            <span class="w-1.5 h-1.5 rounded-full shrink-0 bg-white opacity-80"></span>
+          <span class="inline-flex items-center gap-1.5 pl-1.5 pr-2.5 py-1 rounded-full text-2xs font-bold tracking-wide"
+                style="background: rgba(255,255,255,0.9); color: #1a1830">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0" [style.background]="color()"></span>
             {{ statusMeta().label }}
           </span>
         </div>
@@ -62,38 +73,36 @@ function colorSecondary(hex: string): string {
       <!-- Cuerpo -->
       <div class="flex-1 flex flex-col p-4 gap-3">
         <div>
-          <h3 class="font-bold text-base leading-tight line-clamp-1 text-ink">{{ trip().title }}</h3>
+          <h3 class="font-bold text-base leading-tight line-clamp-1 text-ink group-hover:text-primary-600 transition-colors duration-200">{{ trip().title }}</h3>
           <p class="text-xs mt-1 flex items-center gap-1 text-ink-muted">
-            <svg style="width:10px;height:10px;flex-shrink:0" fill="currentColor" viewBox="0 0 20 20">
+            <svg style="width:11px;height:11px;flex-shrink:0" fill="currentColor" viewBox="0 0 20 20">
               <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
             </svg>
             {{ trip().city }}
           </p>
         </div>
 
-        <div class="h-px bg-surface-border"></div>
+        <div class="hairline"></div>
 
         <div class="flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center gap-2">
+            <span class="chip">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
               </svg>
-              <span class="text-xs font-medium text-ink-secondary">{{ trip().date | date:'d MMM' }}</span>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <svg class="w-3.5 h-3.5 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {{ trip().date | date:'d MMM' }}
+            </span>
+            <span class="chip">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
               </svg>
-              <span class="text-xs font-medium text-ink-secondary">
-                <strong class="font-bold text-ink">{{ trip().spots.length }}</strong>
-                parada{{ trip().spots.length !== 1 ? 's' : '' }}
-              </span>
-            </div>
+              <span class="tabular font-bold text-ink">{{ trip().spots.length }}</span>
+            </span>
           </div>
-          <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg text-primary-500 bg-primary-500/10">
+          <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg text-primary-600 bg-primary-500/10
+                       transition-all duration-200 group-hover:bg-primary-600 group-hover:text-white group-hover:gap-1.5">
             Ver
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>

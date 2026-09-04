@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed } from '@angular/core';
 import { Router } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { TripStore } from '../../../core/services/trip.store';
 import { MapSyncService } from '../../../core/services/map-sync.service';
 import { UiStateService } from '../../../core/services/ui-state.service';
@@ -18,10 +19,18 @@ const STATUS_LABELS: Record<TripStatus, string> = {
   draft: 'Borrador', planned: 'Planificado', completed: 'Completado',
 };
 
+function colorSecondary(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const mix = (c: number) => Math.round(c + (255 - c) * 0.4).toString(16).padStart(2, '0');
+  return `#${mix(r)}${mix(g)}${mix(b)}`;
+}
+
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [TimelineComponent, MapComponent, SpinnerComponent],
+  imports: [TimelineComponent, MapComponent, SpinnerComponent, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.isLoading()) {
@@ -29,11 +38,12 @@ const STATUS_LABELS: Record<TripStatus, string> = {
 
     } @else if (store.selectedTrip()) {
 
-      <div class="flex flex-col h-[calc(100vh-3.5rem)]">
+      <div class="flex flex-col h-[calc(100vh-4rem)]">
 
         <!-- Contextual header -->
-        <div class="bg-surface border-b border-surface-border shrink-0">
-          <div class="px-4 sm:px-6 py-3 flex items-center gap-3">
+        <div class="bg-surface border-b border-surface-border shrink-0"
+             style="box-shadow: var(--shadow-xs)">
+          <div class="px-3 sm:px-5 py-3 flex items-center gap-3">
 
             <!-- Back button -->
             <button
@@ -46,8 +56,12 @@ const STATUS_LABELS: Record<TripStatus, string> = {
               </svg>
             </button>
 
-            <!-- Divider -->
-            <div class="w-px h-6 bg-surface-border shrink-0"></div>
+            <!-- Icono del viaje -->
+            <div class="w-10 h-10 rounded-2xl shrink-0 flex items-center justify-center text-xl select-none hidden sm:flex"
+                 [style.background]="'linear-gradient(135deg, ' + tripColor() + ' 0%, ' + tripColor2() + ' 100%)'"
+                 style="box-shadow: var(--shadow-sm)">
+              <span style="filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25))">{{ store.selectedTrip()!.icon }}</span>
+            </div>
 
             <!-- Trip info -->
             <div class="flex-1 min-w-0 flex items-center gap-3">
@@ -59,9 +73,9 @@ const STATUS_LABELS: Record<TripStatus, string> = {
                   <svg class="w-3 h-3 shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                   </svg>
-                  {{ store.selectedTrip()!.city }}
+                  <span class="truncate">{{ store.selectedTrip()!.city }}</span>
                   <span class="text-surface-border-strong">·</span>
-                  {{ store.selectedTrip()!.date }}
+                  <span class="shrink-0">{{ store.selectedTrip()!.date | date:'d MMM yyyy' }}</span>
                 </p>
               </div>
               <span class="badge shrink-0 hidden sm:inline-flex gap-1.5 {{ statusColor().badge }}">
@@ -72,21 +86,21 @@ const STATUS_LABELS: Record<TripStatus, string> = {
 
             <!-- Acciones -->
             <div class="flex items-center gap-2 shrink-0">
-              <div class="hidden sm:flex items-center gap-1.5 px-3 py-1.5
+              <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5
                           rounded-xl bg-surface-subtle border border-surface-border text-xs">
                 <svg class="w-3.5 h-3.5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                 </svg>
-                <span class="font-semibold text-ink">{{ store.orderedSpots().length }}</span>
+                <span class="font-bold text-ink tabular">{{ store.orderedSpots().length }}</span>
                 <span class="text-ink-muted">paradas</span>
               </div>
-              <button class="btn-ghost text-xs py-1.5 px-3 gap-1.5" (click)="openEditPanel()">
+              <button class="btn-secondary text-xs py-2 px-3.5 gap-1.5" (click)="openEditPanel()">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                 </svg>
-                Editar
+                <span class="hidden sm:inline">Editar</span>
               </button>
             </div>
           </div>
@@ -101,15 +115,25 @@ const STATUS_LABELS: Record<TripStatus, string> = {
                         relative" style="z-index: 500; box-shadow: 2px 0 12px -2px rgb(0 0 0 / 0.12)">
 
             <!-- Panel header -->
-            <div class="px-4 pt-4 pb-2 shrink-0">
-              <div class="flex items-center justify-between">
-                <h3 class="text-sm font-bold text-ink">Itinerario</h3>
-                <button class="btn-ghost text-xs py-1.5 px-2.5 text-primary-500 hover:bg-primary-500/10"
+            <div class="px-4 pt-4 pb-3 shrink-0 border-b border-surface-border">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                    </svg>
+                  </div>
+                  <h3 class="text-sm font-bold text-ink">Itinerario</h3>
+                </div>
+                <button class="inline-flex items-center gap-1 text-xs font-semibold py-1.5 px-2.5 rounded-lg
+                               text-primary-600 bg-primary-500/10 hover:bg-primary-600 hover:text-white
+                               transition-all duration-150"
                         (click)="openAddSpot()">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                   </svg>
-                  Añadir parada
+                  Añadir
                 </button>
               </div>
             </div>
@@ -142,15 +166,25 @@ const STATUS_LABELS: Record<TripStatus, string> = {
             @if (selectedSpot()) {
               <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[400]
                           bg-surface rounded-2xl shadow-modal border border-surface-border
-                          px-4 py-3 flex items-center gap-3 min-w-64 max-w-sm
+                          pl-3 pr-2.5 py-2.5 flex items-center gap-3 min-w-72 max-w-sm
                           animate-fade-up">
-                <div class="w-8 h-8 rounded-xl bg-primary-600 text-white text-xs font-bold
-                            flex items-center justify-center shrink-0">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 text-white text-sm font-bold
+                            flex items-center justify-center shrink-0 tabular"
+                     style="box-shadow: 0 3px 8px -2px rgba(79,70,229,0.5)">
                   {{ selectedSpot()!.order + 1 }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-semibold text-ink truncate">{{ selectedSpot()!.name }}</p>
-                  <p class="text-xs text-ink-muted">{{ selectedSpot()!.startTime }} · {{ selectedSpot()!.duration }}min</p>
+                  <p class="text-sm font-bold text-ink truncate">{{ selectedSpot()!.name }}</p>
+                  <p class="text-xs text-ink-muted flex items-center gap-1.5 mt-0.5">
+                    <span class="inline-flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                      {{ selectedSpot()!.startTime }}
+                    </span>
+                    <span class="text-surface-border-strong">·</span>
+                    <span>{{ selectedSpot()!.duration }} min</span>
+                  </p>
                 </div>
                 <button
                   class="btn-icon shrink-0 w-7 h-7"
@@ -204,6 +238,9 @@ export class TripDetailContainer implements OnInit, OnDestroy {
   readonly statusLabel = computed(() =>
     STATUS_LABELS[this.store.selectedTrip()?.status ?? 'draft']
   );
+
+  readonly tripColor  = computed(() => this.store.selectedTrip()?.color ?? '#6366f1');
+  readonly tripColor2 = computed(() => colorSecondary(this.store.selectedTrip()?.color ?? '#6366f1'));
 
   ngOnInit(): void {
     this.store.loadTrip(this.id());

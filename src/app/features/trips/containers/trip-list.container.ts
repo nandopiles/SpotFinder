@@ -20,64 +20,74 @@ import { CreateTripDto } from '../../../core/models/trip.model';
 
         <!-- Fondo decorativo -->
         <div class="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div class="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_60%_-10%,_#e0e7ff_0%,_transparent_70%)]"></div>
-          <div class="absolute inset-0 opacity-[0.025]"
-               style="background-image: linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(to right, #6366f1 1px, transparent 1px); background-size: 40px 40px;"></div>
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_75%_-20%,_rgba(124,58,237,0.16)_0%,_transparent_60%)]"></div>
+          <div class="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_10%_-10%,_rgba(99,102,241,0.12)_0%,_transparent_55%)]"></div>
+          <div class="absolute inset-0 opacity-[0.03]"
+               style="background-image: linear-gradient(#6366f1 1px, transparent 1px), linear-gradient(to right, #6366f1 1px, transparent 1px); background-size: 44px 44px; mask-image: radial-gradient(ellipse 90% 80% at 50% 0%, black 40%, transparent 75%);"></div>
         </div>
 
-        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+        <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-10">
 
             <!-- Copy -->
             <div class="max-w-xl">
               <!-- Eyebrow -->
-              <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
-                          bg-primary-500/10 border border-primary-500/20 mb-5">
-                <span class="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
-                <span class="text-xs font-semibold text-primary-500 tracking-wide">Planificador de viajes express</span>
+              <div class="inline-flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-full
+                          bg-primary-500/10 border border-primary-500/20 mb-6">
+                <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary-500">
+                  <span class="w-1 h-1 rounded-full bg-white"></span>
+                </span>
+                <span class="text-xs font-semibold text-primary-600 tracking-wide">Planificador de viajes express</span>
               </div>
 
-              <h1 class="text-4xl sm:text-5xl font-bold text-ink tracking-tight leading-[1.1]">
+              <h1 class="display-title text-ink">
                 Tus aventuras,<br>
-                <span style="color: #4f46e5">organizadas</span>
+                <span class="text-gradient">perfectamente organizadas</span>
               </h1>
 
-              <p class="mt-4 text-base text-ink-muted leading-relaxed max-w-md">
+              <p class="mt-5 text-base sm:text-lg text-ink-secondary leading-relaxed max-w-md">
                 Crea itinerarios de un día, arrastra las paradas para reordenarlas
                 y visualízalas en el mapa en tiempo real.
               </p>
 
               <!-- CTA -->
-              <div class="mt-7 flex items-center gap-3">
+              <div class="mt-8 flex flex-wrap items-center gap-3">
                 <button class="btn-primary-lg" (click)="showModal.set(true)">
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
                   </svg>
                   Nuevo viaje
                 </button>
+                @if (!store.isLoading() && store.trips().length) {
+                  <button class="btn-secondary px-5 py-3 rounded-2xl text-base" (click)="scrollToTrips()">
+                    Ver mis viajes
+                  </button>
+                }
               </div>
             </div>
 
             <!-- Stats cards -->
             @if (!store.isLoading() && store.trips().length) {
-              <div class="flex gap-3 lg:flex-col">
-                <div class="card px-5 py-4 flex items-center gap-4 min-w-[140px]">
-                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700
-                              flex items-center justify-center shadow-sm shrink-0">
+              <div class="grid grid-cols-2 gap-3 lg:flex lg:flex-col lg:w-52">
+                <div class="card px-5 py-4 flex items-center gap-4">
+                  <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700
+                              flex items-center justify-center shrink-0"
+                       style="box-shadow: 0 4px 12px -2px rgba(79,70,229,0.5), inset 0 1px 0 rgba(255,255,255,0.2)">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064"/>
                     </svg>
                   </div>
                   <div>
-                    <p class="text-2xl font-bold text-ink leading-none">{{ store.trips().length }}</p>
-                    <p class="text-xs text-ink-muted mt-0.5">viaje{{ store.trips().length !== 1 ? 's' : '' }}</p>
+                    <p class="text-2xl font-extrabold text-ink leading-none tabular">{{ store.trips().length }}</p>
+                    <p class="text-xs font-medium text-ink-muted mt-1">viaje{{ store.trips().length !== 1 ? 's' : '' }}</p>
                   </div>
                 </div>
 
-                <div class="card px-5 py-4 flex items-center gap-4 min-w-[140px]">
-                  <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-500 to-accent-700
-                              flex items-center justify-center shadow-sm shrink-0">
+                <div class="card px-5 py-4 flex items-center gap-4">
+                  <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-accent-500 to-accent-700
+                              flex items-center justify-center shrink-0"
+                       style="box-shadow: 0 4px 12px -2px rgba(192,38,211,0.45), inset 0 1px 0 rgba(255,255,255,0.2)">
                     <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fill-rule="evenodd"
                             d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
@@ -85,8 +95,8 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                     </svg>
                   </div>
                   <div>
-                    <p class="text-2xl font-bold text-ink leading-none">{{ totalSpots() }}</p>
-                    <p class="text-xs text-ink-muted mt-0.5">parada{{ totalSpots() !== 1 ? 's' : '' }}</p>
+                    <p class="text-2xl font-extrabold text-ink leading-none tabular">{{ totalSpots() }}</p>
+                    <p class="text-xs font-medium text-ink-muted mt-1">parada{{ totalSpots() !== 1 ? 's' : '' }}</p>
                   </div>
                 </div>
               </div>
@@ -102,14 +112,17 @@ import { CreateTripDto } from '../../../core/models/trip.model';
         <!-- Error -->
         @if (store.error()) {
           <div class="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-2xl p-4 mb-6">
-            <div class="w-8 h-8 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
-              <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="w-9 h-9 rounded-xl bg-red-500/15 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
               </svg>
             </div>
-            <p class="flex-1 text-sm font-medium text-ink">{{ store.error() }}</p>
-            <button class="btn-ghost text-xs" (click)="store.loadTrips()">
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-ink">Algo salió mal</p>
+              <p class="text-xs text-ink-muted truncate">{{ store.error() }}</p>
+            </div>
+            <button class="btn-secondary text-xs py-2 px-3.5" (click)="store.loadTrips()">
               Reintentar
             </button>
           </div>
@@ -118,11 +131,14 @@ import { CreateTripDto } from '../../../core/models/trip.model';
         <!-- Skeleton loaders — visibles mientras isLoading === true -->
         @if (store.isLoading()) {
           <div>
-            <div class="skeleton h-4 w-32 rounded-lg mb-6"></div>
+            <div class="flex items-center gap-2.5 mb-5">
+              <div class="skeleton h-6 w-28 rounded-lg"></div>
+              <div class="skeleton h-6 w-6 rounded-full"></div>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               @for (_ of skeletons; track $index) {
                 <div class="card overflow-hidden flex flex-col">
-                  <div class="skeleton h-28 rounded-none rounded-t-2xl"></div>
+                  <div class="skeleton h-32 rounded-none rounded-t-2xl"></div>
                   <div class="p-4 flex flex-col gap-3">
                     <div class="space-y-2">
                       <div class="skeleton h-4 w-3/4 rounded-md"></div>
@@ -130,9 +146,9 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                     </div>
                     <div class="skeleton h-px w-full rounded-full"></div>
                     <div class="flex justify-between">
-                      <div class="flex gap-3">
-                        <div class="skeleton h-4 w-16 rounded-md"></div>
-                        <div class="skeleton h-4 w-16 rounded-md"></div>
+                      <div class="flex gap-2">
+                        <div class="skeleton h-6 w-16 rounded-lg"></div>
+                        <div class="skeleton h-6 w-12 rounded-lg"></div>
                       </div>
                       <div class="skeleton h-6 w-12 rounded-lg"></div>
                     </div>
@@ -155,7 +171,18 @@ import { CreateTripDto } from '../../../core/models/trip.model';
         <!-- Grid — solo cuando la carga terminó Y hay viajes -->
         } @else {
           <div>
-            <p class="section-title mb-5">{{ store.trips().length }} viaje{{ store.trips().length !== 1 ? 's' : '' }}</p>
+            <div class="flex items-baseline justify-between gap-4 mb-5">
+              <div class="flex items-center gap-2.5">
+                <h2 class="text-lg font-bold text-ink">Mis viajes</h2>
+                <span class="inline-flex items-center justify-center min-w-6 h-6 px-2 rounded-full
+                             bg-surface-subtle text-xs font-bold text-ink-secondary tabular">
+                  {{ store.trips().length }}
+                </span>
+              </div>
+              <p class="hidden sm:block text-xs text-ink-muted">
+                {{ totalSpots() }} parada{{ totalSpots() !== 1 ? 's' : '' }} en total
+              </p>
+            </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               @for (trip of store.trips(); track trip.id) {
                 <app-trip-card

@@ -20,7 +20,7 @@ const CATEGORY_OPTIONS: { value: ActivityCategory; label: string; emoji: string 
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-         style="background: rgba(15,13,36,0.55); backdrop-filter: blur(2px)"
+         style="background: rgba(15,13,36,0.55); backdrop-filter: blur(6px)"
          (click)="onBackdropClick($event)">
 
       <div class="relative w-full sm:max-w-md bg-surface rounded-t-3xl sm:rounded-2xl

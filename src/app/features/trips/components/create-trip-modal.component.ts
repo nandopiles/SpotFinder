@@ -14,12 +14,13 @@ import { CreateTripDto } from '../../../core/models/trip.model';
       (click)="onBackdropClick($event)"
     >
       <div
-        class="relative w-full sm:max-w-md bg-surface rounded-t-2xl sm:rounded-2xl shadow-modal animate-fade-up"
+        class="relative w-full sm:max-w-md bg-surface rounded-t-3xl sm:rounded-2xl shadow-modal animate-fade-up
+               border border-surface-border"
         (click)="$event.stopPropagation()"
       >
         <!-- Handle (mobile) -->
         <div class="flex justify-center pt-3 sm:hidden">
-          <div class="w-8 h-1 rounded-full bg-surface-border"></div>
+          <div class="w-10 h-1 rounded-full bg-surface-border"></div>
         </div>
 
         <div class="px-6 pt-5 pb-6 sm:pt-6">
@@ -27,16 +28,16 @@ import { CreateTripDto } from '../../../core/models/trip.model';
           <!-- Header -->
           <div class="flex items-center justify-between mb-6">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl flex items-center justify-center"
-                   style="background: #eef2ff">
-                <svg class="w-4.5 h-4.5" style="width:18px;height:18px" fill="none" stroke="#6366f1" stroke-width="1.8" viewBox="0 0 24 24">
+              <div class="w-10 h-10 rounded-2xl flex items-center justify-center bg-gradient-primary shrink-0"
+                   style="box-shadow: 0 4px 12px -2px rgba(79,70,229,0.5), inset 0 1px 0 rgba(255,255,255,0.2)">
+                <svg style="width:18px;height:18px" fill="none" stroke="white" stroke-width="1.8" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round"
                         d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
               </div>
               <div>
-                <h2 class="text-base font-semibold text-ink">Nuevo viaje</h2>
+                <h2 class="text-base font-bold text-ink">Nuevo viaje</h2>
                 <p class="text-xs text-ink-muted">¿A dónde vamos?</p>
               </div>
             </div>
@@ -59,7 +60,7 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                 autocomplete="off"
               />
               @if (form.controls.title.invalid && form.controls.title.touched) {
-                <p class="text-xs mt-1.5" style="color: #e53e3e">El título es obligatorio</p>
+                <p class="text-xs mt-1.5 text-red-500">El título es obligatorio</p>
               }
             </div>
 
@@ -73,7 +74,7 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                   autocomplete="off"
                 />
                 @if (form.controls.city.invalid && form.controls.city.touched) {
-                  <p class="text-xs mt-1.5" style="color: #e53e3e">Obligatorio</p>
+                  <p class="text-xs mt-1.5 text-red-500">Obligatorio</p>
                 }
               </div>
               <div>

@@ -39,13 +39,9 @@ import { SpotCardComponent } from './spot-card.component';
 
           <!-- Connector between spots -->
           @if (!last) {
-            <div class="flex items-stretch ml-[22px] my-0.5 gap-3">
-              <div class="flex flex-col items-center w-7">
-                <div class="w-0.5 flex-1 bg-gradient-to-b from-surface-border-strong to-surface-border"></div>
-              </div>
-              <div class="flex items-center py-1">
-                <span class="text-2xs text-ink-faint font-medium">↓</span>
-              </div>
+            <div class="flex items-center ml-[26px] my-1 gap-2 h-5">
+              <div class="w-px h-full bg-gradient-to-b from-surface-border-strong to-surface-border-strong/40"></div>
+              <div class="w-1 h-1 rounded-full bg-surface-border-strong -ml-[2.5px]"></div>
             </div>
           }
 
