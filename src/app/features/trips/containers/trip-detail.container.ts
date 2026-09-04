@@ -1,11 +1,12 @@
 import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed, signal, effect, untracked } from '@angular/core';
 import { Router } from '@angular/router';
-import { DatePipe } from '@angular/common';
+import { DatePipe, formatDate } from '@angular/common';
 import { TripStore } from '../../../core/services/trip.store';
 import { MapSyncService } from '../../../core/services/map-sync.service';
 import { UiStateService } from '../../../core/services/ui-state.service';
 import { RoutingService, LegOptions } from '../../../core/services/routing.service';
 import { PhotonService } from '../../../core/services/photon.service';
+import { PdfExportService, PdfStop } from '../../../core/services/pdf-export.service';
 import { TimelineComponent } from '../components/timeline.component';
 import { DayScheduleComponent, ScheduleItem } from '../components/day-schedule.component';
 import { MapComponent } from '../../map/components/map.component';
@@ -163,7 +164,7 @@ function colorSecondary(hex: string): string {
 
                 <div class="flex-1"></div>
 
-                <button class="btn-icon w-8 h-8" title="Exportar a PDF" (click)="exportPdf()">
+                <button class="btn-icon w-8 h-8" title="Descargar PDF" (click)="exportPdf()">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
@@ -283,49 +284,6 @@ function colorSecondary(hex: string): string {
         </div>
       </div>
 
-      <!-- ── Hoja imprimible (solo visible al exportar a PDF) ─────────────── -->
-      <div class="print-sheet">
-        <div class="print-cover"
-             [style.background]="'linear-gradient(135deg, ' + tripColor() + ' 0%, ' + tripColor2() + ' 100%)'">
-          <div class="print-cover-icon">{{ store.selectedTrip()!.icon }}</div>
-          <h1 class="print-title">{{ store.selectedTrip()!.title }}</h1>
-          <p class="print-subtitle">
-            {{ store.selectedTrip()!.city }} · {{ store.selectedTrip()!.date | date:'EEEE, d MMMM y' }}
-          </p>
-          <div class="print-stats">
-            <span>{{ store.orderedSpots().length }} paradas</span>
-            <span>·</span>
-            <span>{{ totalTravelMin() }} min de trayectos</span>
-          </div>
-        </div>
-
-        <ol class="print-list">
-          @for (item of schedule(); track item.spot.id) {
-            @if (item.travelMinutes != null) {
-              <li class="print-travel">↓ {{ travelText(item) }}</li>
-            }
-            <li class="print-item">
-              <div class="print-item-time">
-                <strong>{{ item.spot.startTime }}</strong>
-                <span>{{ endTimeOf(item.spot) }}</span>
-              </div>
-              <div class="print-item-body">
-                <div class="print-item-head">
-                  <span class="print-item-name">{{ $index + 1 }}. {{ item.spot.name }}</span>
-                  <span class="print-item-cat">{{ categoryEmoji(item.spot.category) }}</span>
-                </div>
-                <p class="print-item-addr">{{ item.spot.address }}</p>
-                @if (item.spot.notes) {
-                  <p class="print-item-notes">✎ {{ item.spot.notes }}</p>
-                }
-              </div>
-            </li>
-          }
-        </ol>
-
-        <p class="print-footer">Generado con SpotFinder · spotfinder.app</p>
-      </div>
-
     } @else {
       <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4 animate-fade-up">
         <div class="w-16 h-16 rounded-2xl bg-surface-subtle flex items-center justify-center">
@@ -375,6 +333,7 @@ export class TripDetailContainer implements OnInit, OnDestroy {
   // ── Rutas reales (OSRM) entre paradas consecutivas ──
   private readonly routing = inject(RoutingService);
   private readonly photon  = inject(PhotonService);
+  private readonly pdf     = inject(PdfExportService);
   /** legOptions[i] = opciones de transporte del tramo parada i -> i+1 */
   readonly legOptions = signal<LegOptions[]>([]);
   /** Modo elegido por el usuario por tramo (null = usar el recomendado) */
@@ -600,7 +559,41 @@ export class TripDetailContainer implements OnInit, OnDestroy {
   }
 
   exportPdf(): void {
-    window.print();
+    const trip = this.store.selectedTrip();
+    if (!trip) return;
+    const items = this.schedule();
+
+    const stops: PdfStop[] = items.map(item => ({
+      order: item.spot.order + 1,
+      name: item.spot.name,
+      address: item.spot.address,
+      startTime: item.spot.startTime,
+      endTime: this.endTimeOf(item.spot),
+      durationLabel: this.durationText(item.spot.duration),
+      categoryLabel: CATEGORY_META[item.spot.category]?.label ?? 'Actividad',
+      color: item.departColor ?? item.arriveColor ?? trip.color ?? '#6366f1',
+      notes: item.spot.notes || undefined,
+      travel: item.travelMinutes != null ? this.travelText(item) : null,
+    }));
+
+    let dateLabel = trip.date;
+    try {
+      dateLabel = formatDate(trip.date, 'EEEE, d MMMM y', 'es');
+    } catch { /* deja la fecha en crudo si el formato falla */ }
+
+    this.pdf.export({
+      title: trip.title,
+      city: trip.city,
+      dateLabel,
+      stopsCount: this.store.orderedSpots().length,
+      totalTravelLabel: `${this.totalTravelMin()} min`,
+      accent: trip.color ?? '#6366f1',
+      stops,
+    });
+  }
+
+  private durationText(d: number): string {
+    return d >= 60 ? `${Math.floor(d / 60)}h${d % 60 ? ` ${d % 60}m` : ''}` : `${d} min`;
   }
 
   travelText(item: ScheduleItem): string {
@@ -623,9 +616,5 @@ export class TripDetailContainer implements OnInit, OnDestroy {
     const eh = Math.floor(total / 60) % 24;
     const em = total % 60;
     return `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
-  }
-
-  categoryEmoji(category: string): string {
-    return CATEGORY_META[category as keyof typeof CATEGORY_META]?.emoji ?? '📍';
   }
 }

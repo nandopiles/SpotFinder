@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="sfGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#c026d3"/>
+    </linearGradient>
+  </defs>
+  <!-- Fondo redondeado con el degradado del logo -->
+  <rect width="32" height="32" rx="8" fill="url(#sfGrad)"/>
+  <!-- Pin de ubicación blanco (mismo icono que la cabecera) -->
+  <g transform="translate(6 6) scale(1)" fill="#ffffff">
+    <path fill-rule="evenodd" clip-rule="evenodd"
+      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"/>
+  </g>
+</svg>
