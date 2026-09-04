@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy, input, output, computed } from '@angular/core';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { ActivitySpot, CATEGORY_META } from '../../../core/models/trip.model';
+import { ActivitySpot, CATEGORY_META, spotDuration, formatDuration } from '../../../core/models/trip.model';
 
 // Colores inline para evitar purga de Tailwind en clases dinámicas
 const CATEGORY_COLORS: Record<string, string> = {
@@ -182,10 +182,5 @@ export class SpotCardComponent {
     ORDER_COLORS[this.spot().order % ORDER_COLORS.length]
   );
 
-  readonly durationLabel = computed(() => {
-    const d = this.spot().duration;
-    return d >= 60
-      ? `${Math.floor(d / 60)}h${d % 60 ? ` ${d % 60}m` : ''}`
-      : `${d}min`;
-  });
+  readonly durationLabel = computed(() => formatDuration(spotDuration(this.spot())));
 }

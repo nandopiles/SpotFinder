@@ -1,5 +1,5 @@
 import { Component, ChangeDetectionStrategy, input, output } from '@angular/core';
-import { ActivitySpot, CATEGORY_META } from '../../../core/models/trip.model';
+import { ActivitySpot, CATEGORY_META, spotDuration, formatDuration } from '../../../core/models/trip.model';
 
 export type LegTransport = 'walking' | 'cycling' | 'transit' | 'driving';
 
@@ -118,7 +118,7 @@ const CATEGORY_COLORS: Record<string, string> = {
                   <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                  {{ durationLabel(item.spot.duration) }}
+                  {{ durationLabel(item.spot) }}
                 </span>
                 @if (item.conflict) {
                   <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-2xs font-semibold
@@ -156,15 +156,11 @@ export class DayScheduleComponent {
   }
 
   endTime(spot: ActivitySpot): string {
-    const [h, m] = spot.startTime.split(':').map(Number);
-    const total = (h || 0) * 60 + (m || 0) + spot.duration;
-    const eh = Math.floor(total / 60) % 24;
-    const em = total % 60;
-    return `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+    return spot.endTime;
   }
 
-  durationLabel(d: number): string {
-    return d >= 60 ? `${Math.floor(d / 60)}h${d % 60 ? ` ${d % 60}m` : ''}` : `${d} min`;
+  durationLabel(spot: ActivitySpot): string {
+    return formatDuration(spotDuration(spot));
   }
 
   travelLabel(item: ScheduleItem): string {

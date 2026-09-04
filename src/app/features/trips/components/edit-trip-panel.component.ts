@@ -1,8 +1,10 @@
-import { Component, ChangeDetectionStrategy, input, output, inject, computed, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, inject, computed, signal, OnInit } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { Trip, TripStatus, UpdateTripDto } from '../../../core/models/trip.model';
+import { Subject } from 'rxjs';
+import { Trip, TripStatus, UpdateTripDto, Coordinates } from '../../../core/models/trip.model';
+import { PhotonService, PlaceResult } from '../../../core/services/photon.service';
 import { UiStateService } from '../../../core/services/ui-state.service';
 
 const PRESET_COLORS = [
@@ -89,16 +91,82 @@ function colorSecondary(hex: string): string {
             }
           </div>
 
-          <!-- Ciudad + Fecha -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="input-label">Ciudad</label>
-              <input formControlName="city" class="input" placeholder="Barcelona" autocomplete="off"/>
+          <!-- Ciudad (autocomplete Photon) -->
+          <div>
+            <label class="input-label">Ciudad / destino</label>
+            <div class="relative">
+              <div class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                @if (searching()) {
+                  <svg class="w-4 h-4 text-brand animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                } @else {
+                  <svg class="w-4 h-4 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                }
+              </div>
+              <input
+                class="input pl-10 pr-9"
+                placeholder="Barcelona, Roma, Tokio..."
+                autocomplete="off"
+                [value]="query()"
+                (input)="onQuery($event)"
+              />
+              @if (query()) {
+                <button
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full
+                         bg-surface-border hover:bg-surface-border-strong
+                         flex items-center justify-center transition-colors"
+                  (click)="clearSearch()">
+                  <svg class="w-3 h-3 text-ink-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              }
+
+              <!-- Dropdown resultados -->
+              @if (touched() && results().length) {
+                <div class="absolute z-10 left-0 right-0 mt-1.5 py-1.5 rounded-xl bg-surface
+                            border border-surface-border shadow-modal max-h-56 overflow-y-auto">
+                  @for (place of results(); track place.name + place.address) {
+                    <button
+                      type="button"
+                      class="flex items-center gap-3 w-full px-3 py-2.5 text-left
+                             hover:bg-surface-subtle active:bg-surface-border
+                             transition-colors duration-100 group"
+                      (click)="selectPlace(place)"
+                    >
+                      <div class="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center
+                                  bg-surface-subtle group-hover:bg-surface border border-surface-border">
+                        <span class="text-sm">📍</span>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-semibold text-ink truncate">{{ place.name }}</p>
+                        <p class="text-xs text-ink-muted truncate mt-0.5">{{ place.address }}</p>
+                      </div>
+                    </button>
+                  }
+                </div>
+              } @else if (touched() && query().length >= 2 && !searching()) {
+                <div class="absolute z-10 left-0 right-0 mt-1.5 py-4 px-4 rounded-xl bg-surface
+                            border border-surface-border shadow-modal text-center">
+                  <p class="text-sm text-ink-muted">Sin resultados. Prueba con otro nombre.</p>
+                </div>
+              }
             </div>
-            <div>
-              <label class="input-label">Fecha</label>
-              <input formControlName="date" type="date" class="input"/>
-            </div>
+            @if (touched() && !form.controls.city.value) {
+              <p class="text-xs mt-1.5 text-red-400">Selecciona un destino de la lista</p>
+            }
+          </div>
+
+          <!-- Fecha -->
+          <div>
+            <label class="input-label">Fecha</label>
+            <input formControlName="date" type="date" class="input"/>
           </div>
 
           <!-- Color -->
@@ -195,14 +263,33 @@ export class EditTripPanelComponent implements OnInit {
   readonly confirm = output<UpdateTripDto>();
   readonly cancel  = output<void>();
 
-  private readonly fb = inject(FormBuilder);
-  private readonly ui = inject(UiStateService);
+  private readonly fb     = inject(FormBuilder);
+  private readonly ui     = inject(UiStateService);
+  private readonly photon = inject(PhotonService);
 
   readonly saving = this.ui.editPanelSaving;
 
   readonly presetColors  = PRESET_COLORS;
   readonly presetIcons   = PRESET_ICONS;
   readonly statusOptions = STATUS_OPTIONS;
+
+  // ── Estado del autocomplete de ciudad ──
+  readonly query     = signal('');
+  readonly searching = signal(false);
+  /** El dropdown solo se muestra tras interactuar con el buscador, no al precargar. */
+  readonly touched   = signal(false);
+  private readonly query$ = new Subject<string>();
+
+  private readonly results$ = this.photon.search(
+    this.query$.asObservable(),
+    undefined,
+    () => this.searching.set(false),
+  );
+  readonly results = toSignal(this.results$, { initialValue: [] as PlaceResult[] });
+
+  /** Coordenadas del destino. Se actualiza solo si el usuario elige uno nuevo. */
+  private centerCoordinates: Coordinates = { lat: 0, lng: 0 };
+  private readonly coordinatesChanged = signal(false);
 
   readonly form = this.fb.nonNullable.group({
     title:  ['', Validators.required],
@@ -222,7 +309,8 @@ export class EditTripPanelComponent implements OnInit {
     const t = this.trip();
     const v = this.formValue();
     return v.title !== t.title || v.city !== t.city || v.date !== t.date
-        || v.status !== t.status || v.color !== t.color || v.icon !== t.icon;
+        || v.status !== t.status || v.color !== t.color || v.icon !== t.icon
+        || this.coordinatesChanged();
   });
 
   ngOnInit(): void {
@@ -235,10 +323,46 @@ export class EditTripPanelComponent implements OnInit {
       color:  t.color ?? '#6366f1',
       icon:   t.icon  ?? '✈️',
     });
+    // Precargar el buscador y las coordenadas actuales del viaje.
+    this.query.set(t.city);
+    this.centerCoordinates = t.centerCoordinates;
+  }
+
+  onQuery(event: Event): void {
+    const q = (event.target as HTMLInputElement).value;
+    this.touched.set(true);
+    this.query.set(q);
+    this.searching.set(q.trim().length >= 2);
+    this.query$.next(q);
+    // Escribir a mano invalida la selección: solo un lugar elegido del
+    // dropdown rellena `city`. Así el texto plano no se guarda.
+    this.form.controls.city.setValue('');
+    this.coordinatesChanged.set(false);
+  }
+
+  clearSearch(): void {
+    this.touched.set(true);
+    this.query.set('');
+    this.searching.set(false);
+    this.query$.next('');
+    this.form.controls.city.setValue('');
+  }
+
+  selectPlace(place: PlaceResult): void {
+    this.centerCoordinates = place.coordinates;
+    this.coordinatesChanged.set(true);
+    this.form.controls.city.setValue(place.name);
+    this.query.set(place.name);
+    this.searching.set(false);
+    this.touched.set(false);
+    this.query$.next('');
   }
 
   onSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    this.confirm.emit(this.form.getRawValue());
+    const dto: UpdateTripDto = this.form.getRawValue();
+    // Solo enviar coordenadas si el usuario seleccionó un nuevo destino.
+    if (this.coordinatesChanged()) dto.centerCoordinates = this.centerCoordinates;
+    this.confirm.emit(dto);
   }
 }

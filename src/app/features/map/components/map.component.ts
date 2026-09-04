@@ -150,7 +150,7 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       }
 
       const marker = L.marker([lat, lng], { icon })
-        .bindTooltip(`<strong>${spot.order + 1}. ${spot.name}</strong><br>${spot.startTime} · ${spot.duration}min`, {
+        .bindTooltip(`<strong>${spot.order + 1}. ${spot.name}</strong><br>${spot.startTime} – ${spot.endTime}`, {
           direction: 'top',
           offset: [0, 0],
         })

@@ -238,7 +238,8 @@ export class CreateTripModalComponent {
   }
 
   onSubmit(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    // Requiere un destino elegido del dropdown; no se acepta texto plano.
+    if (this.form.invalid || !this.selectedPlace()) { this.form.markAllAsTouched(); return; }
     const { title, city, date } = this.form.getRawValue();
     this.confirm.emit({
       title, city, date,

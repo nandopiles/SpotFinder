@@ -11,7 +11,7 @@ import { TimelineComponent } from '../components/timeline.component';
 import { DayScheduleComponent, ScheduleItem } from '../components/day-schedule.component';
 import { MapComponent } from '../../map/components/map.component';
 import { SpinnerComponent } from '../../../shared/components/spinner.component';
-import { ReorderSpotsDto, TripStatus, UpdateTripDto, CreateSpotDto, UpdateSpotDto, Coordinates, ActivitySpot, TransportMode, CATEGORY_META } from '../../../core/models/trip.model';
+import { ReorderSpotsDto, TripStatus, UpdateTripDto, CreateSpotDto, UpdateSpotDto, Coordinates, ActivitySpot, TransportMode, CATEGORY_META, spotDuration, formatDuration } from '../../../core/models/trip.model';
 
 const STATUS_COLORS: Record<TripStatus, { badge: string; dot: string }> = {
   draft:     { badge: 'bg-surface-subtle text-ink-muted',         dot: 'bg-ink-faint' },
@@ -264,10 +264,10 @@ function colorSecondary(hex: string): string {
                       <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                       </svg>
-                      {{ selectedSpot()!.startTime }}
+                      {{ selectedSpot()!.startTime }} – {{ selectedSpot()!.endTime }}
                     </span>
                     <span class="text-surface-border-strong">·</span>
-                    <span>{{ selectedSpot()!.duration }} min</span>
+                    <span>{{ durationText(selectedSpot()!) }}</span>
                   </p>
                 </div>
                 <button
@@ -400,7 +400,7 @@ export class TripDetailContainer implements OnInit, OnDestroy {
         departColor:   !isLast ? this.segmentColor(i) : null,
       });
 
-      prevEnd = Math.max(planned, earliest) + spot.duration;
+      prevEnd = Math.max(planned, earliest) + spotDuration(spot);
     });
 
     return items;
@@ -569,7 +569,7 @@ export class TripDetailContainer implements OnInit, OnDestroy {
       address: item.spot.address,
       startTime: item.spot.startTime,
       endTime: this.endTimeOf(item.spot),
-      durationLabel: this.durationText(item.spot.duration),
+      durationLabel: this.durationText(item.spot),
       categoryLabel: CATEGORY_META[item.spot.category]?.label ?? 'Actividad',
       color: item.departColor ?? item.arriveColor ?? trip.color ?? '#6366f1',
       notes: item.spot.notes || undefined,
@@ -592,8 +592,8 @@ export class TripDetailContainer implements OnInit, OnDestroy {
     });
   }
 
-  private durationText(d: number): string {
-    return d >= 60 ? `${Math.floor(d / 60)}h${d % 60 ? ` ${d % 60}m` : ''}` : `${d} min`;
+  durationText(spot: ActivitySpot): string {
+    return formatDuration(spotDuration(spot));
   }
 
   travelText(item: ScheduleItem): string {
@@ -611,10 +611,6 @@ export class TripDetailContainer implements OnInit, OnDestroy {
   }
 
   endTimeOf(spot: ActivitySpot): string {
-    const [h, m] = spot.startTime.split(':').map(Number);
-    const total = (h || 0) * 60 + (m || 0) + spot.duration;
-    const eh = Math.floor(total / 60) % 24;
-    const em = total % 60;
-    return `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+    return spot.endTime;
   }
 }

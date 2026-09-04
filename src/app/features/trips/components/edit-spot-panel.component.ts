@@ -2,6 +2,7 @@ import { Component, ChangeDetectionStrategy, input, output, inject, computed, On
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivitySpot, ActivityCategory, UpdateSpotDto } from '../../../core/models/trip.model';
+import { timeOrderValidator } from './add-spot-modal.component';
 import { UiStateService } from '../../../core/services/ui-state.service';
 
 const CATEGORY_OPTIONS: { value: ActivityCategory; label: string; emoji: string; color: string }[] = [
@@ -109,17 +110,20 @@ function colorSecondary(hex: string): string {
             </div>
           </div>
 
-          <!-- Hora + Duración -->
+          <!-- Hora desde / hasta -->
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="input-label">Hora</label>
+              <label class="input-label">Hora desde</label>
               <input formControlName="startTime" type="time" class="input"/>
             </div>
             <div>
-              <label class="input-label">Duración (min)</label>
-              <input formControlName="duration" type="number" min="5" step="5" class="input"/>
+              <label class="input-label">Hora hasta</label>
+              <input formControlName="endTime" type="time" class="input"/>
             </div>
           </div>
+          @if (form.errors?.['timeOrder']) {
+            <p class="text-xs text-red-500 -mt-2">La hora de fin debe ser posterior a la de inicio</p>
+          }
 
           <!-- Notas -->
           <div>
@@ -168,9 +172,9 @@ export class EditSpotPanelComponent implements OnInit {
     name:      ['', Validators.required],
     category:  ['culture' as ActivityCategory, Validators.required],
     startTime: ['10:00', Validators.required],
-    duration:  [60, [Validators.required, Validators.min(5)]],
+    endTime:   ['11:00', Validators.required],
     notes:     [''],
-  });
+  }, { validators: timeOrderValidator });
 
   readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
 
@@ -185,7 +189,7 @@ export class EditSpotPanelComponent implements OnInit {
     const s = this.spot();
     const v = this.formValue();
     return v.name !== s.name || v.category !== s.category || v.startTime !== s.startTime
-        || v.duration !== s.duration || (v.notes || '') !== (s.notes || '');
+        || v.endTime !== s.endTime || (v.notes || '') !== (s.notes || '');
   });
 
   ngOnInit(): void {
@@ -194,14 +198,14 @@ export class EditSpotPanelComponent implements OnInit {
       name:      s.name,
       category:  s.category,
       startTime: s.startTime,
-      duration:  s.duration,
+      endTime:   s.endTime,
       notes:     s.notes ?? '',
     });
   }
 
   onSubmit(): void {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
-    const { name, category, startTime, duration, notes } = this.form.getRawValue();
-    this.confirm.emit({ name, category, startTime, duration, notes: notes || undefined });
+    const { name, category, startTime, endTime, notes } = this.form.getRawValue();
+    this.confirm.emit({ name, category, startTime, endTime, notes: notes || undefined });
   }
 }

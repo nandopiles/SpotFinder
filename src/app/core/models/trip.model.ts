@@ -15,7 +15,7 @@ export interface ActivitySpot {
   coordinates: Coordinates;
   address: string;
   startTime: string;   // "HH:mm"
-  duration: number;    // minutes
+  endTime: string;     // "HH:mm"
   order: number;
   imageUrl?: string;
   notes?: string;
@@ -56,3 +56,32 @@ export const CATEGORY_META: Record<ActivityCategory, { label: string; color: str
   leisure:  { label: 'Ocio',        color: 'bg-blue-100 text-blue-700',     emoji: '🎭' },
   shopping: { label: 'Compras',     color: 'bg-pink-100 text-pink-700',     emoji: '🛍️' },
 };
+
+// ── Helpers de tiempo (una única fuente de verdad) ─────────────────────────
+
+/** "HH:mm" -> minutos desde medianoche. */
+export function toMinutes(hhmm: string): number {
+  const [h, m] = hhmm.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+/** Minutos desde medianoche -> "HH:mm" (envuelve a 24h). */
+export function toHHMM(min: number): string {
+  const h = Math.floor(min / 60) % 24;
+  const m = ((min % 60) + 60) % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+/**
+ * Duración de una parada en minutos, derivada de startTime/endTime.
+ * Si endTime es anterior o igual a startTime devuelve 0.
+ */
+export function spotDuration(spot: { startTime: string; endTime: string }): number {
+  return Math.max(0, toMinutes(spot.endTime) - toMinutes(spot.startTime));
+}
+
+/** Formatea una duración en minutos: "1h 30m" / "45 min". */
+export function formatDuration(min: number): string {
+  if (min <= 0) return '—';
+  return min >= 60 ? `${Math.floor(min / 60)}h${min % 60 ? ` ${min % 60}m` : ''}` : `${min} min`;
+}
