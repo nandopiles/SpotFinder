@@ -1,0 +1,14 @@
+# Configuración de despliegue en Netlify
+
+[build]
+  command = "npm run build"
+  # Angular 19 genera la salida en la subcarpeta browser
+  publish = "dist/spot-finder/browser"
+
+# Redirección SPA: cualquier ruta desconocida sirve index.html
+# para que el router de Angular gestione la navegación del lado cliente
+# (evita 404 al recargar en rutas profundas como /trips/123).
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
