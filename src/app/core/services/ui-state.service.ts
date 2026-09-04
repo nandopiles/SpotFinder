@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Trip, UpdateTripDto, CreateSpotDto, UpdateSpotDto, ActivitySpot, Coordinates } from '../models/trip.model';
+import { PlaceResult } from './photon.service';
 
 export type PanelState = 'closed' | 'open' | 'closing';
 
@@ -13,6 +14,7 @@ export class UiStateService {
   readonly addSpotOpen     = signal(false);
   readonly addSpotBias     = signal<Coordinates | undefined>(undefined);
   readonly addSpotConfirm  = signal<((dto: CreateSpotDto) => void) | null>(null);
+  readonly addSpotPlace    = signal<PlaceResult | null>(null);
 
   // Panel de edición de parada
   readonly editSpotState   = signal<PanelState>('closed');

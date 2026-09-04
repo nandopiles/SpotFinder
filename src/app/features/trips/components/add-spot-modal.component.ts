@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, output, input, inject, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, output, input, inject, signal } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Subject } from 'rxjs';
@@ -260,10 +260,12 @@ const CATEGORY_OPTIONS: { value: ActivityCategory; label: string; emoji: string 
     </div>
   `,
 })
-export class AddSpotModalComponent {
+export class AddSpotModalComponent implements OnInit {
   readonly confirm = output<CreateSpotDto>();
   readonly cancel  = output<void>();
   readonly bias    = input<Coordinates>();
+  /** Lugar precargado (p.ej. al hacer click en el mapa) — abre directo en fase detalle */
+  readonly initialPlace = input<PlaceResult | null>(null);
 
   private readonly fb      = inject(FormBuilder);
   private readonly photon  = inject(PhotonService);
@@ -328,6 +330,11 @@ export class AddSpotModalComponent {
   selectPlace(place: PlaceResult): void {
     this.selectedPlace.set(place);
     this.form.controls.name.setValue(place.name);
+  }
+
+  ngOnInit(): void {
+    const place = this.initialPlace();
+    if (place) this.selectPlace(place);
   }
 
   clearPlace(): void {

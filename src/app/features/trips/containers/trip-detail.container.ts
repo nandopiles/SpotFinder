@@ -1,13 +1,16 @@
-import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed, untracked } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed, signal, effect, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TripStore } from '../../../core/services/trip.store';
 import { MapSyncService } from '../../../core/services/map-sync.service';
 import { UiStateService } from '../../../core/services/ui-state.service';
+import { RoutingService, LegOptions } from '../../../core/services/routing.service';
+import { PhotonService } from '../../../core/services/photon.service';
 import { TimelineComponent } from '../components/timeline.component';
+import { DayScheduleComponent, ScheduleItem } from '../components/day-schedule.component';
 import { MapComponent } from '../../map/components/map.component';
 import { SpinnerComponent } from '../../../shared/components/spinner.component';
-import { ReorderSpotsDto, TripStatus, UpdateTripDto, CreateSpotDto, UpdateSpotDto } from '../../../core/models/trip.model';
+import { ReorderSpotsDto, TripStatus, UpdateTripDto, CreateSpotDto, UpdateSpotDto, Coordinates, ActivitySpot, TransportMode, CATEGORY_META } from '../../../core/models/trip.model';
 
 const STATUS_COLORS: Record<TripStatus, { badge: string; dot: string }> = {
   draft:     { badge: 'bg-surface-subtle text-ink-muted',         dot: 'bg-ink-faint' },
@@ -30,7 +33,7 @@ function colorSecondary(hex: string): string {
 @Component({
   selector: 'app-trip-detail',
   standalone: true,
-  imports: [TimelineComponent, MapComponent, SpinnerComponent, DatePipe],
+  imports: [TimelineComponent, DayScheduleComponent, MapComponent, SpinnerComponent, DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (store.isLoading()) {
@@ -110,12 +113,12 @@ function colorSecondary(hex: string): string {
         <div class="flex flex-1 overflow-hidden">
 
           <!-- Timeline panel -->
-          <aside class="w-80 xl:w-96 shrink-0 flex flex-col bg-surface
+          <aside class="itinerary-panel w-80 xl:w-96 shrink-0 flex flex-col bg-surface
                         border-r border-surface-border overflow-hidden
                         relative" style="z-index: 500; box-shadow: 2px 0 12px -2px rgb(0 0 0 / 0.12)">
 
             <!-- Panel header -->
-            <div class="px-4 pt-4 pb-3 shrink-0 border-b border-surface-border">
+            <div class="px-4 pt-4 pb-3 shrink-0 border-b border-surface-border space-y-3">
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
                   <div class="w-7 h-7 rounded-lg bg-brand/10 flex items-center justify-center">
@@ -136,20 +139,88 @@ function colorSecondary(hex: string): string {
                   Añadir
                 </button>
               </div>
+
+              <!-- Toggle vista + exportar -->
+              <div class="flex items-center gap-2">
+                <div class="flex p-0.5 rounded-lg bg-surface-subtle border border-surface-border">
+                  <button class="px-2.5 py-1 rounded-md text-2xs font-semibold transition-all duration-150"
+                          [class.bg-surface]="viewMode() === 'timeline'"
+                          [class.text-ink]="viewMode() === 'timeline'"
+                          [class.shadow-sm]="viewMode() === 'timeline'"
+                          [class.text-ink-muted]="viewMode() !== 'timeline'"
+                          (click)="setView('timeline')">
+                    Lista
+                  </button>
+                  <button class="px-2.5 py-1 rounded-md text-2xs font-semibold transition-all duration-150"
+                          [class.bg-surface]="viewMode() === 'day'"
+                          [class.text-ink]="viewMode() === 'day'"
+                          [class.shadow-sm]="viewMode() === 'day'"
+                          [class.text-ink-muted]="viewMode() !== 'day'"
+                          (click)="setView('day')">
+                    Modo día
+                  </button>
+                </div>
+
+                <div class="flex-1"></div>
+
+                <button class="btn-icon w-8 h-8" title="Exportar a PDF" (click)="exportPdf()">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Resumen: trayecto total + aviso de conflictos -->
+              @if (store.orderedSpots().length > 1) {
+                <div class="flex items-center gap-2 text-2xs">
+                  <span class="chip">
+                    <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    {{ totalTravelMin() }} min a pie
+                  </span>
+                  @if (hasConflicts()) {
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg font-semibold
+                                 bg-amber-500/15 text-amber-600 dark:text-amber-400">
+                      ⚠ Conflictos de horario
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg font-semibold
+                                 bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                      ✓ Horario viable
+                    </span>
+                  }
+                </div>
+              }
             </div>
 
-            <!-- Scrollable timeline -->
-            <div class="flex-1 overflow-y-auto px-4 pb-4">
-              <app-timeline
-                [spots]="store.orderedSpots()"
-                [selectedSpotId]="mapSync.selectedSpotId()"
-                [hoveredSpotId]="mapSync.hoveredSpotId()"
-                (reorder)="onReorder($event)"
-                (hover)="mapSync.hoverSpot($event)"
-                (select)="mapSync.selectSpot($event)"
-                (edit)="openEditSpot($event)"
-                (remove)="onRemoveSpot($event)"
-              />
+            <!-- Scrollable content: lista o agenda -->
+            <div class="flex-1 overflow-y-auto px-4 pb-4 pt-3">
+              @if (viewMode() === 'timeline') {
+                <app-timeline
+                  [spots]="store.orderedSpots()"
+                  [selectedSpotId]="mapSync.selectedSpotId()"
+                  [hoveredSpotId]="mapSync.hoveredSpotId()"
+                  [schedule]="schedule()"
+                  [legOptions]="legOptions()"
+                  [legModes]="legModes()"
+                  [segmentColors]="SEGMENT_COLORS"
+                  (reorder)="onReorder($event)"
+                  (hover)="mapSync.hoverSpot($event)"
+                  (select)="mapSync.selectSpot($event)"
+                  (edit)="openEditSpot($event)"
+                  (remove)="onRemoveSpot($event)"
+                  (legModeChange)="setLegMode($event.index, $event.mode)"
+                />
+              } @else {
+                <app-day-schedule
+                  [items]="schedule()"
+                  (select)="mapSync.selectSpot($event)"
+                  (hover)="mapSync.hoverSpot($event)"
+                />
+              }
             </div>
           </aside>
 
@@ -160,9 +231,19 @@ function colorSecondary(hex: string): string {
               [center]="store.selectedTrip()!.centerCoordinates"
               [selectedSpotId]="mapSync.selectedSpotId()"
               [hoveredSpotId]="mapSync.hoveredSpotId()"
+              [routeSegments]="routeSegments()"
               (spotClick)="mapSync.selectSpot($event)"
               (spotHover)="mapSync.hoverSpot($event)"
+              (mapClick)="onMapClick($event)"
             />
+
+            <!-- Hint para añadir por click -->
+            <div class="absolute top-3 left-1/2 -translate-x-1/2 z-[400] pointer-events-none
+                        px-3 py-1.5 rounded-full bg-surface/90 border border-surface-border
+                        text-2xs font-medium text-ink-muted shadow-sm hidden sm:block"
+                 style="backdrop-filter: blur(8px)">
+              💡 Haz click en el mapa para añadir una parada
+            </div>
 
             <!-- Selected spot overlay -->
             @if (selectedSpot()) {
@@ -200,6 +281,49 @@ function colorSecondary(hex: string): string {
             }
           </div>
         </div>
+      </div>
+
+      <!-- ── Hoja imprimible (solo visible al exportar a PDF) ─────────────── -->
+      <div class="print-sheet">
+        <div class="print-cover"
+             [style.background]="'linear-gradient(135deg, ' + tripColor() + ' 0%, ' + tripColor2() + ' 100%)'">
+          <div class="print-cover-icon">{{ store.selectedTrip()!.icon }}</div>
+          <h1 class="print-title">{{ store.selectedTrip()!.title }}</h1>
+          <p class="print-subtitle">
+            {{ store.selectedTrip()!.city }} · {{ store.selectedTrip()!.date | date:'EEEE, d MMMM y' }}
+          </p>
+          <div class="print-stats">
+            <span>{{ store.orderedSpots().length }} paradas</span>
+            <span>·</span>
+            <span>{{ totalTravelMin() }} min de trayectos</span>
+          </div>
+        </div>
+
+        <ol class="print-list">
+          @for (item of schedule(); track item.spot.id) {
+            @if (item.travelMinutes != null) {
+              <li class="print-travel">↓ {{ travelText(item) }}</li>
+            }
+            <li class="print-item">
+              <div class="print-item-time">
+                <strong>{{ item.spot.startTime }}</strong>
+                <span>{{ endTimeOf(item.spot) }}</span>
+              </div>
+              <div class="print-item-body">
+                <div class="print-item-head">
+                  <span class="print-item-name">{{ $index + 1 }}. {{ item.spot.name }}</span>
+                  <span class="print-item-cat">{{ categoryEmoji(item.spot.category) }}</span>
+                </div>
+                <p class="print-item-addr">{{ item.spot.address }}</p>
+                @if (item.spot.notes) {
+                  <p class="print-item-notes">✎ {{ item.spot.notes }}</p>
+                }
+              </div>
+            </li>
+          }
+        </ol>
+
+        <p class="print-footer">Generado con SpotFinder · spotfinder.app</p>
       </div>
 
     } @else {
@@ -245,8 +369,136 @@ export class TripDetailContainer implements OnInit, OnDestroy {
   readonly tripColor  = computed(() => this.store.selectedTrip()?.color ?? '#6366f1');
   readonly tripColor2 = computed(() => colorSecondary(this.store.selectedTrip()?.color ?? '#6366f1'));
 
+  // ── Vista: timeline (lista) o day (agenda horaria) ──
+  readonly viewMode = signal<'timeline' | 'day'>('timeline');
+
+  // ── Rutas reales (OSRM) entre paradas consecutivas ──
+  private readonly routing = inject(RoutingService);
+  private readonly photon  = inject(PhotonService);
+  /** legOptions[i] = opciones de transporte del tramo parada i -> i+1 */
+  readonly legOptions = signal<LegOptions[]>([]);
+  /** Modo elegido por el usuario por tramo (null = usar el recomendado) */
+  private readonly legModeOverrides = signal<(TransportMode | null)[]>([]);
+
+  /** Modo activo (elegido o recomendado) por tramo */
+  readonly legModes = computed<TransportMode[]>(() => {
+    const opts = this.legOptions();
+    const overrides = this.legModeOverrides();
+    return opts.map((o, i) => overrides[i] ?? o.recommended);
+  });
+
+  /** Colores por tramo para diferenciarlos en el mapa y la UI */
+  readonly SEGMENT_COLORS = [
+    '#6366f1', '#ec4899', '#f59e0b', '#10b981',
+    '#3b82f6', '#8b5cf6', '#ef4444', '#14b8a6',
+  ];
+
+  segmentColor(i: number): string {
+    return this.SEGMENT_COLORS[i % this.SEGMENT_COLORS.length];
+  }
+
+  /** Segmentos de ruta con su geometría y color, para dibujar en el mapa */
+  readonly routeSegments = computed(() =>
+    this.legOptions().map((o, i) => ({ geometry: o.geometry, color: this.segmentColor(i) }))
+  );
+
+  /** Duración (s) del modo activo por tramo */
+  private durationOf(i: number): number {
+    const opt = this.legOptions()[i];
+    if (!opt) return 0;
+    const mode = this.legModes()[i];
+    return opt.options.find(o => o.mode === mode)?.duration ?? 0;
+  }
+
+  /**
+   * Análisis del horario: para cada parada calcula la hora de llegada real
+   * (encadenando duración + trayecto) y marca conflicto si su hora de inicio
+   * planificada es anterior a la hora en que realmente puede llegar.
+   */
+  readonly schedule = computed<ScheduleItem[]>(() => {
+    const spots = this.store.orderedSpots();
+    const opts = this.legOptions();
+    const modes = this.legModes();
+    const items: ScheduleItem[] = [];
+    let prevEnd: number | null = null;   // minutos desde medianoche
+
+    spots.forEach((spot, i) => {
+      const planned = this.toMinutes(spot.startTime);
+      const travelSec = i > 0 ? this.durationOf(i - 1) : 0;
+      const travelMin = Math.round(travelSec / 60);
+      const earliest = prevEnd !== null ? prevEnd + travelMin : planned;
+      const conflict = prevEnd !== null && planned < earliest;
+
+      const isLast = i === spots.length - 1;
+      items.push({
+        spot,
+        travelMinutes: i > 0 ? travelMin : null,
+        travelMeters:  i > 0 ? (opts[i - 1]?.distance ?? null) : null,
+        travelMode:    i > 0 ? (modes[i - 1] ?? null) : null,
+        conflict,
+        suggestedTime: conflict ? this.toHHMM(earliest) : null,
+        arriveColor:   i > 0 ? this.segmentColor(i - 1) : null,
+        departColor:   !isLast ? this.segmentColor(i) : null,
+      });
+
+      prevEnd = Math.max(planned, earliest) + spot.duration;
+    });
+
+    return items;
+  });
+
+  readonly hasConflicts = computed(() => this.schedule().some(i => i.conflict));
+
+  /** Total de tiempo en trayectos (min) con los modos activos */
+  readonly totalTravelMin = computed(() =>
+    Math.round(this.legOptions().reduce((acc, _, i) => acc + this.durationOf(i), 0) / 60)
+  );
+
+  constructor() {
+    // Recalcula rutas reales cuando cambian las paradas (orden o coordenadas)
+    effect(() => {
+      const spots = this.store.orderedSpots();
+      this.computeRoutes(spots);
+    });
+  }
+
   ngOnInit(): void {
     this.store.loadTrip(this.id());
+  }
+
+  private async computeRoutes(spots: ActivitySpot[]): Promise<void> {
+    if (spots.length < 2) {
+      this.legOptions.set([]);
+      this.legModeOverrides.set([]);
+      return;
+    }
+    const pairs = spots.slice(0, -1).map((s, i) => [s, spots[i + 1]] as const);
+    const results = await Promise.all(
+      pairs.map(([a, b]) => this.routing.legOptions(a.coordinates, b.coordinates))
+    );
+    // Actualización atómica: opciones + reset de overrides al nuevo tamaño
+    this.legOptions.set(results);
+    this.legModeOverrides.set(results.map(() => null));
+  }
+
+  /** El usuario elige un modo de transporte para un tramo concreto */
+  setLegMode(index: number, mode: TransportMode): void {
+    this.legModeOverrides.update(arr => {
+      const next = [...arr];
+      next[index] = mode;
+      return next;
+    });
+  }
+
+  private toMinutes(hhmm: string): number {
+    const [h, m] = hhmm.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  }
+
+  private toHHMM(min: number): string {
+    const h = Math.floor(min / 60) % 24;
+    const m = min % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
   ngOnDestroy(): void {
@@ -330,5 +582,50 @@ export class TripDetailContainer implements OnInit, OnDestroy {
       this.mapSync.selectSpot(null);
     }
     await this.store.deleteSpot(tripId, spotId);
+  }
+
+  async onMapClick(coords: Coordinates): Promise<void> {
+    const trip = this.store.selectedTrip();
+    if (!trip) return;
+    // Resolver el lugar del punto pulsado y abrir el modal precargado
+    const place = await this.photon.reverse(coords);
+    this.ui.addSpotBias.set(trip.centerCoordinates);
+    this.ui.addSpotPlace.set(place);
+    this.ui.addSpotConfirm.set((dto: CreateSpotDto) => this.onAddSpot(dto));
+    this.ui.addSpotOpen.set(true);
+  }
+
+  setView(mode: 'timeline' | 'day'): void {
+    this.viewMode.set(mode);
+  }
+
+  exportPdf(): void {
+    window.print();
+  }
+
+  travelText(item: ScheduleItem): string {
+    const min = item.travelMinutes ?? 0;
+    const meters = item.travelMeters;
+    const dist = meters == null ? '' : meters >= 1000
+      ? ` (${(meters / 1000).toFixed(1)} km)`
+      : ` (${Math.round(meters)} m)`;
+    const time = min < 1 ? 'menos de 1 min' : `${min} min`;
+    const modeLabel: Record<string, string> = {
+      walking: 'a pie', cycling: 'en bici', transit: 'en transporte', driving: 'en coche',
+    };
+    const mode = item.travelMode ? ` ${modeLabel[item.travelMode]}` : '';
+    return `${time}${mode}${dist}`;
+  }
+
+  endTimeOf(spot: ActivitySpot): string {
+    const [h, m] = spot.startTime.split(':').map(Number);
+    const total = (h || 0) * 60 + (m || 0) + spot.duration;
+    const eh = Math.floor(total / 60) % 24;
+    const em = total % 60;
+    return `${String(eh).padStart(2, '0')}:${String(em).padStart(2, '0')}`;
+  }
+
+  categoryEmoji(category: string): string {
+    return CATEGORY_META[category as keyof typeof CATEGORY_META]?.emoji ?? '📍';
   }
 }

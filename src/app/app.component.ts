@@ -37,6 +37,7 @@ import { UpdateTripDto, UpdateSpotDto } from './core/models/trip.model';
     @if (ui.addSpotOpen()) {
       <app-add-spot-modal
         [bias]="ui.addSpotBias()"
+        [initialPlace]="ui.addSpotPlace()"
         (confirm)="onAddSpot($event)"
         (cancel)="closeAddSpot()"
       />
@@ -94,6 +95,7 @@ export class AppComponent {
 
   protected closeAddSpot(): void {
     this.ui.addSpotOpen.set(false);
+    this.ui.addSpotPlace.set(null);
   }
 
   protected async onSaveSpot(dto: UpdateSpotDto): Promise<void> {
