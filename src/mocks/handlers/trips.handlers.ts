@@ -1,5 +1,5 @@
 import { http, HttpResponse, delay } from 'msw';
-import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto, ActivitySpot, CreateSpotDto } from '../../app/core/models/trip.model';
+import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto, ActivitySpot, CreateSpotDto, UpdateSpotDto } from '../../app/core/models/trip.model';
 import { SEED_TRIPS } from '../data/seed';
 
 const STORAGE_KEY = 'msw_trips';
@@ -93,6 +93,7 @@ export const tripHandlers = [
     return HttpResponse.json(newSpot, { status: 201 });
   }),
 
+  // ⚠️ /spots/reorder debe ir ANTES que /spots/:spotId — si no, ":spotId" capturaría "reorder"
   http.patch('/api/trips/:id/spots/reorder', async ({ params, request }) => {
     await delay(LATENCY);
     const trips = getTrips();
@@ -109,5 +110,39 @@ export const tripHandlers = [
     };
     saveTrips(trips);
     return HttpResponse.json(trips[idx]);
+  }),
+
+  http.patch('/api/trips/:id/spots/:spotId', async ({ params, request }) => {
+    await delay(LATENCY);
+    const trips = getTrips();
+    const idx = trips.findIndex(t => t.id === params['id']);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    const spotIdx = trips[idx].spots.findIndex(s => s.id === params['spotId']);
+    if (spotIdx === -1) return new HttpResponse(null, { status: 404 });
+    const dto = await request.json() as UpdateSpotDto;
+    const updatedSpot: ActivitySpot = { ...trips[idx].spots[spotIdx], ...dto };
+    trips[idx] = {
+      ...trips[idx],
+      spots: trips[idx].spots.with(spotIdx, updatedSpot),
+      updatedAt: now(),
+    };
+    saveTrips(trips);
+    return HttpResponse.json(updatedSpot);
+  }),
+
+  http.delete('/api/trips/:id/spots/:spotId', async ({ params }) => {
+    await delay(LATENCY);
+    const trips = getTrips();
+    const idx = trips.findIndex(t => t.id === params['id']);
+    if (idx === -1) return new HttpResponse(null, { status: 404 });
+    const remaining = trips[idx].spots.filter(s => s.id !== params['spotId']);
+    if (remaining.length === trips[idx].spots.length) return new HttpResponse(null, { status: 404 });
+    // Re-normalizar el order para no dejar huecos
+    const spots = remaining
+      .sort((a, b) => a.order - b.order)
+      .map((s, i) => ({ ...s, order: i }));
+    trips[idx] = { ...trips[idx], spots, updatedAt: now() };
+    saveTrips(trips);
+    return new HttpResponse(null, { status: 204 });
   }),
 ];

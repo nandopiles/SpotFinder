@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, OnInit, OnDestroy, inject, input, computed, untracked } from '@angular/core';
 import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { TripStore } from '../../../core/services/trip.store';
@@ -7,7 +7,7 @@ import { UiStateService } from '../../../core/services/ui-state.service';
 import { TimelineComponent } from '../components/timeline.component';
 import { MapComponent } from '../../map/components/map.component';
 import { SpinnerComponent } from '../../../shared/components/spinner.component';
-import { ReorderSpotsDto, TripStatus, UpdateTripDto, CreateSpotDto } from '../../../core/models/trip.model';
+import { ReorderSpotsDto, TripStatus, UpdateTripDto, CreateSpotDto, UpdateSpotDto } from '../../../core/models/trip.model';
 
 const STATUS_COLORS: Record<TripStatus, { badge: string; dot: string }> = {
   draft:     { badge: 'bg-surface-subtle text-ink-muted',         dot: 'bg-ink-faint' },
@@ -147,6 +147,8 @@ function colorSecondary(hex: string): string {
                 (reorder)="onReorder($event)"
                 (hover)="mapSync.hoverSpot($event)"
                 (select)="mapSync.selectSpot($event)"
+                (edit)="openEditSpot($event)"
+                (remove)="onRemoveSpot($event)"
               />
             </div>
           </aside>
@@ -215,6 +217,7 @@ function colorSecondary(hex: string): string {
         <button class="btn-primary" (click)="goBack()">Volver a mis viajes</button>
       </div>
     }
+
   `,
 })
 export class TripDetailContainer implements OnInit, OnDestroy {
@@ -252,6 +255,11 @@ export class TripDetailContainer implements OnInit, OnDestroy {
     this.ui.editPanelSave.set(null);
     this.ui.addSpotOpen.set(false);
     this.ui.addSpotConfirm.set(null);
+    this.ui.editSpotState.set('closed');
+    this.ui.editSpotSpot.set(null);
+    this.ui.editSpotSave.set(null);
+    this.ui.confirmSpotDeleteOpen.set(false);
+    this.ui.confirmSpotDelete.set(null);
   }
 
   openEditPanel(): void {
@@ -290,5 +298,37 @@ export class TripDetailContainer implements OnInit, OnDestroy {
     const tripId = this.store.selectedTripId();
     if (!tripId) return;
     await this.store.reorderSpots(tripId, dto);
+  }
+
+  openEditSpot(spotId: string): void {
+    const spot = this.store.orderedSpots().find(s => s.id === spotId);
+    if (!spot) return;
+    this.ui.editSpotSpot.set(spot);
+    this.ui.editSpotSave.set((dto: UpdateSpotDto) => this.onUpdateSpot(spotId, dto));
+    this.ui.editSpotState.set('open');
+  }
+
+  async onUpdateSpot(spotId: string, dto: UpdateSpotDto): Promise<void> {
+    const tripId = untracked(this.store.selectedTripId);
+    if (!tripId) return;
+    await this.store.updateSpot(tripId, spotId, dto);
+  }
+
+  onRemoveSpot(spotId: string): void {
+    const spot = this.store.orderedSpots().find(s => s.id === spotId);
+    if (!spot) return;
+    this.ui.confirmSpotDeleteName.set(spot.name);
+    this.ui.confirmSpotDelete.set(() => this.performDeleteSpot(spot.id));
+    this.ui.confirmSpotDeleteOpen.set(true);
+  }
+
+  private async performDeleteSpot(spotId: string): Promise<void> {
+    const tripId = untracked(this.store.selectedTripId);
+    if (!tripId) return;
+    // Si la parada borrada estaba seleccionada en el mapa, deseleccionar
+    if (untracked(this.mapSync.selectedSpotId) === spotId) {
+      this.mapSync.selectSpot(null);
+    }
+    await this.store.deleteSpot(tripId, spotId);
   }
 }

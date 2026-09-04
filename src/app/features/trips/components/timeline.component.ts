@@ -34,6 +34,8 @@ import { SpotCardComponent } from './spot-card.component';
             [isHovered]="hoveredSpotId() === spot.id"
             (hover)="hover.emit($event)"
             (select)="select.emit($event)"
+            (edit)="edit.emit($event)"
+            (remove)="remove.emit($event)"
           />
           </div>
 
@@ -78,6 +80,8 @@ export class TimelineComponent {
   readonly reorder = output<ReorderSpotsDto>();
   readonly hover = output<string | null>();
   readonly select = output<string>();
+  readonly edit = output<string>();
+  readonly remove = output<string>();
 
   onDrop(event: CdkDragDrop<ActivitySpot[]>): void {
     if (event.previousIndex === event.currentIndex) return;

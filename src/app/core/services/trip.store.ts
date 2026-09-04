@@ -1,7 +1,7 @@
 import { Injectable, computed, inject, signal, untracked } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto, ActivitySpot, CreateSpotDto } from '../models/trip.model';
+import { Trip, CreateTripDto, UpdateTripDto, ReorderSpotsDto, ActivitySpot, CreateSpotDto, UpdateSpotDto } from '../models/trip.model';
 
 type LoadingState = 'idle' | 'loading' | 'error';
 
@@ -90,6 +90,41 @@ export class TripStore {
       ...s,
       trips: s.trips.map(t => t.id === tripId ? { ...t, spots: [...t.spots, spot] } : t),
     }));
+  }
+
+  async updateSpot(tripId: string, spotId: string, dto: UpdateSpotDto): Promise<void> {
+    const updated = await firstValueFrom(
+      this.http.patch<ActivitySpot>(`${this.BASE}/${tripId}/spots/${spotId}`, dto)
+    );
+    this.state.update(s => ({
+      ...s,
+      trips: s.trips.map(t =>
+        t.id === tripId
+          ? { ...t, spots: t.spots.map(sp => (sp.id === spotId ? updated : sp)) }
+          : t
+      ),
+    }));
+  }
+
+  async deleteSpot(tripId: string, spotId: string): Promise<void> {
+    const snapshot = untracked(this.state);
+    // Optimista: quitar la parada y re-normalizar el order localmente
+    this.state.update(s => ({
+      ...s,
+      trips: s.trips.map(t => {
+        if (t.id !== tripId) return t;
+        const spots = t.spots
+          .filter(sp => sp.id !== spotId)
+          .sort((a, b) => a.order - b.order)
+          .map((sp, i) => ({ ...sp, order: i }));
+        return { ...t, spots };
+      }),
+    }));
+    try {
+      await firstValueFrom(this.http.delete(`${this.BASE}/${tripId}/spots/${spotId}`));
+    } catch {
+      this.state.set(snapshot);
+    }
   }
 
   async reorderSpots(tripId: string, dto: ReorderSpotsDto): Promise<void> {

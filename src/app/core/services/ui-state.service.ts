@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { Trip, UpdateTripDto, CreateSpotDto, Coordinates } from '../models/trip.model';
+import { Trip, UpdateTripDto, CreateSpotDto, UpdateSpotDto, ActivitySpot, Coordinates } from '../models/trip.model';
 
 export type PanelState = 'closed' | 'open' | 'closing';
 
@@ -13,4 +13,15 @@ export class UiStateService {
   readonly addSpotOpen     = signal(false);
   readonly addSpotBias     = signal<Coordinates | undefined>(undefined);
   readonly addSpotConfirm  = signal<((dto: CreateSpotDto) => void) | null>(null);
+
+  // Panel de edición de parada
+  readonly editSpotState   = signal<PanelState>('closed');
+  readonly editSpotSpot    = signal<ActivitySpot | null>(null);
+  readonly editSpotSave    = signal<((dto: UpdateSpotDto) => void) | null>(null);
+  readonly editSpotSaving  = signal(false);
+
+  // Confirmación de borrado de parada — se monta en app.component (fuera del shell) para desenfocarlo
+  readonly confirmSpotDeleteOpen = signal(false);
+  readonly confirmSpotDeleteName = signal('');
+  readonly confirmSpotDelete     = signal<(() => void) | null>(null);
 }

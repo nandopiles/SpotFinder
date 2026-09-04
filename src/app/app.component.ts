@@ -2,14 +2,16 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './shared/components/navbar.component';
 import { EditTripPanelComponent } from './features/trips/components/edit-trip-panel.component';
+import { EditSpotPanelComponent } from './features/trips/components/edit-spot-panel.component';
 import { AddSpotModalComponent } from './features/trips/components/add-spot-modal.component';
+import { ConfirmModalComponent } from './shared/components/confirm-modal.component';
 import { UiStateService } from './core/services/ui-state.service';
-import { UpdateTripDto } from './core/models/trip.model';
+import { UpdateTripDto, UpdateSpotDto } from './core/models/trip.model';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, EditTripPanelComponent, AddSpotModalComponent],
+  imports: [RouterOutlet, NavbarComponent, EditTripPanelComponent, EditSpotPanelComponent, AddSpotModalComponent, ConfirmModalComponent],
   template: `
     <!-- Blurred shell -->
     <div class="min-h-screen flex flex-col"
@@ -39,13 +41,38 @@ import { UpdateTripDto } from './core/models/trip.model';
         (cancel)="closeAddSpot()"
       />
     }
+
+    <!-- Edit spot panel rendered outside blurred wrapper -->
+    @if (ui.editSpotState() !== 'closed' && ui.editSpotSpot()) {
+      <app-edit-spot-panel
+        [spot]="ui.editSpotSpot()!"
+        [closing]="ui.editSpotState() === 'closing'"
+        (confirm)="onSaveSpot($event)"
+        (cancel)="closeEditSpot()"
+      />
+    }
+
+    <!-- Confirm delete spot rendered outside blurred wrapper -->
+    @if (ui.confirmSpotDeleteOpen()) {
+      <app-confirm-modal
+        title="Eliminar parada"
+        [description]="spotDeleteDescription()"
+        confirmLabel="Eliminar"
+        cancelLabel="Cancelar"
+        (confirm)="onConfirmSpotDelete()"
+        (cancel)="closeConfirmSpotDelete()"
+      />
+    }
   `,
 })
 export class AppComponent {
   protected readonly ui = inject(UiStateService);
 
   protected isOpen(): boolean {
-    return this.ui.editPanelState() !== 'closed' || this.ui.addSpotOpen();
+    return this.ui.editPanelState() !== 'closed'
+        || this.ui.addSpotOpen()
+        || this.ui.editSpotState() !== 'closed'
+        || this.ui.confirmSpotDeleteOpen();
   }
 
   protected async onSave(dto: UpdateTripDto): Promise<void> {
@@ -67,5 +94,32 @@ export class AppComponent {
 
   protected closeAddSpot(): void {
     this.ui.addSpotOpen.set(false);
+  }
+
+  protected async onSaveSpot(dto: UpdateSpotDto): Promise<void> {
+    this.ui.editSpotSaving.set(true);
+    await this.ui.editSpotSave()?.call(null, dto);
+    this.ui.editSpotSaving.set(false);
+    this.closeEditSpot();
+  }
+
+  protected closeEditSpot(): void {
+    this.ui.editSpotState.set('closing');
+    setTimeout(() => this.ui.editSpotState.set('closed'), 300);
+  }
+
+  protected spotDeleteDescription(): string {
+    const name = this.ui.confirmSpotDeleteName();
+    return `¿Seguro que quieres eliminar "${name}"? Esta acción no se puede deshacer.`;
+  }
+
+  protected onConfirmSpotDelete(): void {
+    this.ui.confirmSpotDelete()?.call(null);
+    this.closeConfirmSpotDelete();
+  }
+
+  protected closeConfirmSpotDelete(): void {
+    this.ui.confirmSpotDeleteOpen.set(false);
+    this.ui.confirmSpotDelete.set(null);
   }
 }

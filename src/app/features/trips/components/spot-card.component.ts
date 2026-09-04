@@ -103,16 +103,52 @@ const ORDER_COLORS = [
           }
         </div>
 
-        <!-- Drag handle -->
-        <div
-          class="shrink-0 flex items-center self-stretch px-0.5
-                 text-ink-faint hover:text-ink-muted cursor-grab active:cursor-grabbing
-                 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-          cdkDragHandle
-        >
-          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/>
-          </svg>
+        <!-- Acciones + drag handle -->
+        <div class="shrink-0 flex flex-col items-center gap-1 -mr-1
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+
+          <!-- Editar -->
+          <button
+            type="button"
+            class="w-6 h-6 rounded-lg flex items-center justify-center
+                   text-ink-muted hover:text-primary-600 hover:bg-primary-500/10
+                   transition-colors duration-150"
+            title="Editar parada"
+            (click)="$event.stopPropagation(); edit.emit(spot().id)"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+          </button>
+
+          <!-- Eliminar -->
+          <button
+            type="button"
+            class="w-6 h-6 rounded-lg flex items-center justify-center
+                   text-ink-muted hover:text-red-500 hover:bg-red-500/10
+                   transition-colors duration-150"
+            title="Eliminar parada"
+            (click)="$event.stopPropagation(); remove.emit(spot().id)"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+
+          <!-- Drag handle -->
+          <div
+            class="w-6 h-6 rounded-lg flex items-center justify-center
+                   text-ink-faint hover:text-ink-muted cursor-grab active:cursor-grabbing"
+            title="Arrastra para reordenar"
+            (click)="$event.stopPropagation()"
+            cdkDragHandle
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z"/>
+            </svg>
+          </div>
         </div>
       </div>
     </div>
@@ -125,6 +161,8 @@ export class SpotCardComponent {
 
   readonly hover  = output<string | null>();
   readonly select = output<string>();
+  readonly edit   = output<string>();
+  readonly remove = output<string>();
 
   readonly categoryMeta = computed(() => CATEGORY_META[this.spot().category]);
 
