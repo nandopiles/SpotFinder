@@ -111,7 +111,7 @@ const ORDER_COLORS = [
           <button
             type="button"
             class="w-6 h-6 rounded-lg flex items-center justify-center
-                   text-ink-muted hover:text-primary-600 hover:bg-primary-500/10
+                   text-ink-muted hover:text-brand hover:bg-brand/10
                    transition-colors duration-150"
             title="Editar parada"
             (click)="$event.stopPropagation(); edit.emit(spot().id)"

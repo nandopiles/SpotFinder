@@ -17,6 +17,9 @@
   --color-ink-muted:            #82809e;  /* texto terciario */
   --color-ink-faint:            #b6b4cc;  /* texto fantasma */
 
+  /* Índigo de acento para texto/iconos (RGB para opacidad de Tailwind) — modo claro */
+  --brand: 79 70 229;   /* #4f46e5 (primary-600) */
+
   /* Sombras — dos capas (key light + ambient) para profundidad realista en claro */
   --shadow-xs:   0 1px 2px -1px rgb(30 27 75 / 0.08);
   --shadow-sm:   0 1px 2px -1px rgb(30 27 75 / 0.08), 0 2px 6px -2px rgb(30 27 75 / 0.06);
@@ -27,23 +30,28 @@
 }
 
 .dark {
-  --color-surface:              #22203a;  /* cards — más claro que el fondo */
-  --color-surface-muted:        #100e1d;  /* fondo de página — profundo */
-  --color-surface-subtle:       #2c2945;  /* chips, inputs, hover */
-  --color-surface-border:       #363351;  /* bordes sutiles */
-  --color-surface-border-strong:#4f4b73;  /* bordes visibles */
-  --color-ink:                  #f2f1fe;  /* texto principal */
-  --color-ink-secondary:        #c6c4e2;  /* texto secundario */
-  --color-ink-muted:            #9694b6;  /* texto terciario */
-  --color-ink-faint:            #6e6b93;  /* texto fantasma */
+  /* Paleta oscura "slate índigo" — menos saturada y con más contraste para mejor legibilidad.
+     Jerarquía de superficies con saltos de luminosidad claros: muted < surface < subtle. */
+  --color-surface:              #1c1f2e;  /* cards */
+  --color-surface-muted:        #12141f;  /* fondo de página */
+  --color-surface-subtle:       #272b3d;  /* chips, inputs, hover — separado de la card */
+  --color-surface-border:       #333850;  /* bordes sutiles — visibles sobre la card */
+  --color-surface-border-strong:#4a5069;  /* bordes visibles */
+  --color-ink:                  #f4f5fb;  /* texto principal — casi blanco */
+  --color-ink-secondary:        #ccd0e0;  /* texto secundario — alto contraste */
+  --color-ink-muted:            #a6abc0;  /* texto terciario — AA sobre card */
+  --color-ink-faint:            #7f849c;  /* texto fantasma — legible pero discreto */
 
-  /* En oscuro las sombras se apoyan en negro puro con más difusión */
-  --shadow-xs:   0 1px 2px -1px rgb(0 0 0 / 0.40);
-  --shadow-sm:   0 1px 2px -1px rgb(0 0 0 / 0.40), 0 2px 6px -2px rgb(0 0 0 / 0.32);
-  --shadow-md:   0 2px 4px -2px rgb(0 0 0 / 0.44), 0 8px 20px -4px rgb(0 0 0 / 0.44);
-  --shadow-lg:   0 4px 10px -4px rgb(0 0 0 / 0.50), 0 20px 40px -8px rgb(0 0 0 / 0.56);
-  --shadow-modal:0 12px 24px -8px rgb(0 0 0 / 0.55), 0 40px 72px -16px rgb(0 0 0 / 0.65);
-  --ring-focus:  0 0 0 3px rgb(129 140 248 / 0.32);
+  /* Índigo de acento aclarado en oscuro para contraste sobre superficies oscuras */
+  --brand: 156 167 250;   /* #9ca7fa — claro y legible sobre fondos oscuros */
+
+  /* En oscuro las sombras se apoyan en negro con difusión amplia, algo más suaves */
+  --shadow-xs:   0 1px 2px -1px rgb(0 0 0 / 0.35);
+  --shadow-sm:   0 1px 2px -1px rgb(0 0 0 / 0.35), 0 2px 6px -2px rgb(0 0 0 / 0.28);
+  --shadow-md:   0 2px 4px -2px rgb(0 0 0 / 0.38), 0 8px 20px -4px rgb(0 0 0 / 0.38);
+  --shadow-lg:   0 4px 10px -4px rgb(0 0 0 / 0.42), 0 20px 40px -8px rgb(0 0 0 / 0.48);
+  --shadow-modal:0 12px 24px -8px rgb(0 0 0 / 0.48), 0 40px 72px -16px rgb(0 0 0 / 0.58);
+  --ring-focus:  0 0 0 3px rgb(129 140 248 / 0.38);
 }
 
 /* ─── View Transition (theme toggle) ────────────────────────────────────────── */

@@ -18,6 +18,9 @@ module.exports = {
           900: '#312e81',
           950: '#1e1b4b',
         },
+        // Índigo "de acento/texto": se aclara en modo oscuro para legibilidad.
+        // Usar en texto e iconos sobre superficies (text-brand, bg-brand/10…).
+        brand: 'rgb(var(--brand) / <alpha-value>)',
         accent: {
           50:  '#fdf4ff',
           100: '#fae8ff',

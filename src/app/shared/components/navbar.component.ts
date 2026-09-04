@@ -22,7 +22,7 @@ import { ThemeService } from '../../core/services/theme.service';
           </div>
           <div class="flex flex-col leading-none">
             <span class="font-extrabold text-[15px] text-ink tracking-tight">
-              Spot<span class="text-primary-600">Finder</span>
+              Spot<span class="text-brand">Finder</span>
             </span>
             <span class="text-[10px] font-medium text-ink-muted tracking-wide mt-0.5">Planificador express</span>
           </div>

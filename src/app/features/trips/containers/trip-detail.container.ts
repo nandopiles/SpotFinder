@@ -88,7 +88,7 @@ function colorSecondary(hex: string): string {
             <div class="flex items-center gap-2 shrink-0">
               <div class="hidden md:flex items-center gap-1.5 px-3 py-1.5
                           rounded-xl bg-surface-subtle border border-surface-border text-xs">
-                <svg class="w-3.5 h-3.5 text-primary-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3.5 h-3.5 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                 </svg>
@@ -118,8 +118,8 @@ function colorSecondary(hex: string): string {
             <div class="px-4 pt-4 pb-3 shrink-0 border-b border-surface-border">
               <div class="flex items-center justify-between gap-2">
                 <div class="flex items-center gap-2">
-                  <div class="w-7 h-7 rounded-lg bg-primary-500/10 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div class="w-7 h-7 rounded-lg bg-brand/10 flex items-center justify-center">
+                    <svg class="w-4 h-4 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
                     </svg>
@@ -127,7 +127,7 @@ function colorSecondary(hex: string): string {
                   <h3 class="text-sm font-bold text-ink">Itinerario</h3>
                 </div>
                 <button class="inline-flex items-center gap-1 text-xs font-semibold py-1.5 px-2.5 rounded-lg
-                               text-primary-600 bg-primary-500/10 hover:bg-primary-600 hover:text-white
+                               text-brand bg-brand/10 hover:bg-primary-600 hover:text-white
                                transition-all duration-150"
                         (click)="openAddSpot()">
                   <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

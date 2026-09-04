@@ -37,7 +37,7 @@ import { CreateTripDto } from '../../../core/models/trip.model';
                 <span class="inline-flex items-center justify-center w-4 h-4 rounded-full bg-primary-500">
                   <span class="w-1 h-1 rounded-full bg-white"></span>
                 </span>
-                <span class="text-xs font-semibold text-primary-600 tracking-wide">Planificador de viajes express</span>
+                <span class="text-xs font-semibold text-brand tracking-wide">Planificador de viajes express</span>
               </div>
 
               <h1 class="display-title text-ink">

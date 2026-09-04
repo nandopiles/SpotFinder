@@ -41,8 +41,8 @@ const CATEGORY_OPTIONS: { value: ActivityCategory; label: string; emoji: string 
           <div class="px-5 pt-4 pb-3 shrink-0">
             <div class="flex items-center justify-between mb-4">
               <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-xl bg-primary-500/10 flex items-center justify-center">
-                  <svg class="w-4 h-4 text-primary-500" fill="currentColor" viewBox="0 0 20 20">
+                <div class="w-8 h-8 rounded-xl bg-brand/10 flex items-center justify-center">
+                  <svg class="w-4 h-4 text-brand" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                   </svg>
                 </div>
@@ -62,7 +62,7 @@ const CATEGORY_OPTIONS: { value: ActivityCategory; label: string; emoji: string 
             <div class="relative">
               <div class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
                 @if (searching()) {
-                  <svg class="w-4 h-4 text-primary-500 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg class="w-4 h-4 text-brand animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
