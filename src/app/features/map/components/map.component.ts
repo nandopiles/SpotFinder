@@ -1,10 +1,19 @@
 import {
-  Component, ChangeDetectionStrategy, OnInit, OnDestroy,
+  Component, ChangeDetectionStrategy, OnDestroy,
   AfterViewInit, ElementRef, ViewChild, input, output, effect,
   inject,
 } from '@angular/core';
 import * as L from 'leaflet';
 import { ActivitySpot, Coordinates } from '../../../core/models/trip.model';
+import { ThemeService } from '../../../core/services/theme.service';
+
+// Tiles estándar de OpenStreetMap (gratuitos, sin API key).
+// El modo oscuro se consigue con un filtro CSS sobre estos mismos tiles.
+const TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_ATTRIBUTION = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
+// Filtro que transforma los tiles claros en una versión oscura agradable
+const DARK_TILE_FILTER = 'invert(1) hue-rotate(180deg) brightness(0.95) contrast(0.9) saturate(0.85)';
 
 // Fix Leaflet default icon paths with Angular bundler
 const iconDefault = L.icon({
@@ -45,14 +54,19 @@ export class MapComponent implements AfterViewInit, OnDestroy {
   readonly spotClick = output<string>();
   readonly spotHover = output<string | null>();
 
+  private readonly theme = inject(ThemeService);
+
   private map!: L.Map;
   private markers = new Map<string, L.Marker>();
   private polyline?: L.Polyline;
+  private tileLayer?: L.TileLayer;
 
   constructor() {
     effect(() => this.syncMarkers(this.spots()));
     effect(() => this.highlightMarker(this.selectedSpotId(), 'selected'));
     effect(() => this.highlightMarker(this.hoveredSpotId(), 'hovered'));
+    // Cambia los tiles del mapa al alternar el tema
+    effect(() => this.applyTileTheme(this.theme.isDark()));
   }
 
   ngAfterViewInit(): void {
@@ -71,13 +85,25 @@ export class MapComponent implements AfterViewInit, OnDestroy {
       zoomControl: true,
     });
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    // Tile layer estándar de OSM (se crea una sola vez)
+    this.tileLayer = L.tileLayer(TILE_URL, {
+      attribution: TILE_ATTRIBUTION,
       maxZoom: 19,
     }).addTo(this.map);
 
+    // Aplica el filtro de tema actual
+    this.applyTileTheme(this.theme.isDark());
+
     // Render initial spots if already available
     if (this.spots().length) this.syncMarkers(this.spots());
+  }
+
+  private applyTileTheme(dark: boolean): void {
+    const container = this.tileLayer?.getContainer();
+    if (!container) return;
+    container.style.filter = dark ? DARK_TILE_FILTER : '';
+    // Transición suave al alternar el tema
+    container.style.transition = 'filter 0.4s ease';
   }
 
   private syncMarkers(spots: ActivitySpot[]): void {
